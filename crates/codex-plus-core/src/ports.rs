@@ -20,11 +20,18 @@ fn guard_port_offset() -> u16 {
     #[cfg(windows)]
     {
         if let Ok(user) = std::env::var("USERNAME") {
-            let hash: u16 = user.bytes().fold(0u16, |acc, b| acc.wrapping_add(b as u16));
-            return hash % 1000;
+            return guard_port_offset_for_user(&user);
         }
     }
     0
+}
+
+#[cfg(any(windows, test))]
+fn guard_port_offset_for_user(user: &str) -> u16 {
+    let hash = user.bytes().fold(0u16, |acc, byte| {
+        acc.wrapping_add(byte.to_ascii_lowercase() as u16)
+    });
+    hash % 1000
 }
 
 /// Effective launcher guard port (base + auto-offset, overridable via env var).
@@ -180,6 +187,11 @@ pub fn acquire_resilient_loopback_port_guard(port: u16) -> std::io::Result<Loopb
     acquire_resilient_loopback_port_guard_at(port, &crate::paths::default_app_state_dir())
 }
 
+pub fn acquire_loopback_lock_guard(port: u16) -> std::io::Result<LoopbackPortGuard> {
+    let (file, path) = acquire_lock_guard(port, &crate::paths::default_app_state_dir())?;
+    Ok(LoopbackPortGuard::fallback_lock(file, path))
+}
+
 fn acquire_resilient_loopback_port_guard_at(
     port: u16,
     state_dir: &Path,
@@ -320,6 +332,29 @@ mod tests {
         )
         .unwrap_err();
         assert_eq!(second.kind(), std::io::ErrorKind::WouldBlock);
+    }
+
+    #[test]
+    fn lock_only_guard_blocks_second_instance_without_binding_a_port() {
+        let temp = tempfile::tempdir().unwrap();
+        let port = find_available_loopback_port();
+        let (file, path) = acquire_lock_guard(port, temp.path()).unwrap();
+        let guard = LoopbackPortGuard::fallback_lock(file, path);
+
+        assert!(guard._listener.is_none());
+        assert!(guard.fallback_path().is_some());
+
+        let second = acquire_lock_guard(port, temp.path()).unwrap_err();
+        assert_eq!(second.kind(), std::io::ErrorKind::WouldBlock);
+    }
+
+    #[test]
+    fn windows_user_guard_offset_is_case_insensitive() {
+        assert_eq!(
+            guard_port_offset_for_user("James"),
+            guard_port_offset_for_user("james")
+        );
+        assert_eq!(guard_port_offset_for_user("James"), 528);
     }
 
     #[test]

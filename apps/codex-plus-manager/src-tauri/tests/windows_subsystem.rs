@@ -36,8 +36,12 @@ fn manager_repeated_launch_activates_existing_window() {
     let lib_rs = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/src/lib.rs"))
         .expect("read manager lib.rs");
 
-    assert!(lib_rs.contains("focus_existing_manager_window();"));
+    assert!(lib_rs.contains("if focus_existing_manager_window()"));
     assert!(lib_rs.contains("windows_activate_process_window"));
+    assert!(lib_rs.contains("is_manager_process_name"));
+    assert!(lib_rs.contains("MANAGER_GUARD_RETRY_ATTEMPTS"));
+    assert!(lib_rs.contains("manager.existing_window_not_found"));
+    assert!(lib_rs.contains("acquire_loopback_lock_guard"));
 }
 
 #[test]
@@ -64,9 +68,41 @@ fn manager_close_exits_instead_of_hiding_to_tray() {
     assert!(!lib_rs.contains("let _ = close_event_window.hide();"));
     assert!(!lib_rs.contains("minimized_window.hide()"));
     assert!(lib_rs.contains("app_handle.exit(0);"));
+    assert!(lib_rs.contains("manager.close_requested"));
+    assert!(lib_rs.contains("manager.exit_requested"));
+    assert!(lib_rs.contains("manager.exit_completed"));
+    assert!(lib_rs.contains("manager.exit_forced"));
+    assert!(lib_rs.contains("MANAGER_EXIT_WATCHDOG_MS"));
+    assert!(lib_rs.contains("window.destroy()"));
+    assert!(lib_rs.contains("tray.set_visible(false)"));
     assert!(!app_tsx.contains("CloseConfirmDialog"));
     assert!(app_tsx.contains("manager_exit_app"));
     assert!(app_tsx.contains("manager_hide_to_tray"));
+}
+
+#[test]
+fn manager_build_backups_are_non_executable_and_deployment_is_hash_checked() {
+    let manifest_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
+    let repo_root = manifest_dir
+        .parent()
+        .and_then(std::path::Path::parent)
+        .and_then(std::path::Path::parent)
+        .unwrap();
+    let deploy_script = repo_root.join("scripts/deploy/windows/install-manager-build.ps1");
+    let stability_script = repo_root.join("scripts/test/windows/manager-startup-stability.ps1");
+    let deploy_script =
+        std::fs::read_to_string(deploy_script).expect("read manager deployment script");
+    let stability_script =
+        std::fs::read_to_string(stability_script).expect("read manager stability script");
+
+    assert!(deploy_script.contains("codex-plus-plus-manager.exe.disabled"));
+    assert!(!deploy_script.contains(".bak.exe"));
+    assert!(deploy_script.contains("Get-FileHash"));
+    assert!(deploy_script.contains("failed SHA-256 verification"));
+    assert!(stability_script.contains("CODEX_PLUS_MANAGER_EXIT_AFTER_READY_MS"));
+    assert!(stability_script.contains("STARTUP_STABILITY_TEST=PASSED"));
+    assert!(stability_script.contains("IMMEDIATE_RELAUNCH="));
+    assert!(stability_script.contains("Get-NetTCPConnection"));
 }
 
 #[test]

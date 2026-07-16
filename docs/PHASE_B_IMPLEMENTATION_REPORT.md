@@ -30,6 +30,26 @@
 - Windows Manifest 增加 `PerMonitorV2` DPI 声明，改善 WebView2 在 Windows 缩放环境下的文字清晰度。
 - 中英文切换功能保持不变。
 
+### 1.2 阶段 B.2 启动稳定性修正
+
+Windows 实机复现“退出后偶尔打不开”后确认存在三个叠加原因：
+
+- 可执行备份 `codex-plus-plus-manager.phase-b-ui.bak.exe` 被误启动，旧版关闭逻辑把窗口隐藏到后台并继续占用单实例端口。
+- 第二次启动只识别精确文件名 `codex-plus-plus-manager.exe`，无法恢复改名备份的隐藏窗口，因此无提示退出。
+- Windows 桌面与 SSH 会话可能分别提供 `James` 和 `james`，旧代码按大小写计算出不同单实例端口。
+
+阶段 B.2 已完成：
+
+- 旧备份进程已精确停止，备份移出 `target\release` 并改为 `.disabled`。
+- 当前版和旧改名版管理器都可以被单实例恢复逻辑识别。
+- 窗口尚未创建或旧进程正在退出时，第二次启动会在限定时间内重试。
+- 管理器端口被无关程序占用时，改用锁文件继续启动，不再无提示退出。
+- Windows 用户名统一转为小写后计算单实例端口，桌面、SSH 和快捷方式使用同一端口。
+- 关闭时销毁主窗口、隐藏托盘并请求正常退出；750 毫秒后仍未结束则只终止当前管理器自身。
+- 新增启动、关闭请求、退出完成、强制退出、旧窗口恢复和锁冲突诊断事件。
+- 新增安全部署脚本，旧版备份统一保存为 `codex-plus-plus-manager.exe.disabled` 并校验 SHA-256。
+- 新增 Windows 启动稳定性脚本，覆盖普通循环和“正在退出时立即重开”。
+
 ## 2. 主要实现
 
 ### 2.1 工作站外壳
@@ -136,6 +156,9 @@ apps/codex-plus-manager/src-tauri/windows-app-manifest.xml
 apps/codex-plus-manager/src-tauri/tauri.conf.json
 apps/codex-plus-manager/src-tauri/tests/windows_subsystem.rs
 crates/codex-plus-core/src/paths.rs
+crates/codex-plus-core/src/ports.rs
+scripts/deploy/windows/install-manager-build.ps1
+scripts/test/windows/manager-startup-stability.ps1
 ```
 
 ## 4. 验证结果
@@ -162,6 +185,9 @@ npm test                            通过，22 项测试
 cargo fmt --all -- --check          通过
 cargo test --workspace --offline    通过
 npm run build                       通过
+启动→退出循环 20 次                 通过
+退出中立即重开 3 次                 通过
+最终部署后复测 3 次 + 立即重开 1 次 通过
 ```
 
 测试子进程继续使用：
@@ -176,17 +202,17 @@ NO_PROXY=127.0.0.1,localhost
 
 ```text
 路径：D:\Dev\codex-portable\target\release\codex-plus-plus-manager.exe
-大小：26,584,064 bytes
-SHA-256：B3CCC68D255E48C199215F01B093283169CAA01BF97A5EC8EF5307752B55B400
+大小：26,515,968 bytes
+SHA-256：6C393C8F65D5CB71D2B74B4DDB8C7C06C8AF7FF73C4EFF0D417EDE11F255157C
 ```
 
 该哈希只对应本次本地阶段 B 构建，不是正式发布签名。
 
 构建时原 `target\release\codex-plus-plus.exe` 正被现有 Codex 启动链使用，因此没有强制停止该进程。
-新版管理器先在独立目标目录构建，再单独替换管理器 EXE。旧管理器备份为：
+新版管理器使用安全部署脚本替换，旧管理器备份不再保留可执行扩展名：
 
 ```text
-D:\Dev\codex-portable\target\release\codex-plus-plus-manager.phase-b-ui.bak.exe
+D:\Dev\codex-portable-build-backups\<版本或时间>\codex-plus-plus-manager.exe.disabled
 ```
 
 ## 5. 已知事项
@@ -195,8 +221,8 @@ D:\Dev\codex-portable\target\release\codex-plus-plus-manager.phase-b-ui.bak.exe
 2. 上游 npm 依赖仍报告 1 个 low 和 1 个 high vulnerability，本阶段没有执行可能改变锁文件的 `npm audit fix`。
 3. 阶段 B 没有实现 `CODEXPP_HOME`、移动盘根目录或数据迁移。
 4. 阶段 B 没有实现受控停止、安全弹出、签名更新或服务器连接。
-5. Windows EXE 已完成原生编译，但为保护用户现有 Codex 数据，没有在未隔离状态下远程启动。
-   右上角关闭和 DPI 效果需要用户在交互式 Windows 桌面手动打开新版 EXE 做最终目视确认。
+5. Windows EXE 已完成原生编译和非交互会话的启动、退出、端口释放与立即重开测试。
+   SSH 会话没有交互式桌面窗口句柄，因此右上角 X 的实际点击和 DPI 效果仍需用户在 Windows 桌面目视确认一次。
 
 ## 6. 下一阶段
 
