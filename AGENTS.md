@@ -1,27 +1,29 @@
 # AGENTS.md
 
-本文件为 CodexPlusPlus fork 的工作规范，指导 agent 在本仓库工作。
+本文件为 Codex 便携工作站 Fork 的工作规范，指导 agent 在本仓库工作。
 
 ## 项目概述
 
-本仓库是 [BigPizzaV3/CodexPlusPlus](https://github.com/BigPizzaV3/CodexPlusPlus) 的 fork，目标是实现「按模型粒度配置上下文窗口与自动压缩阈值」feature（对应 issue #1171 / #931）。
+本仓库是 [BigPizzaV3/CodexPlusPlus](https://github.com/BigPizzaV3/CodexPlusPlus) 的公开 fork，目标是在保留 Codex++ 现有能力的基础上开发 Windows「Codex 便携工作站」。
 
-采用 codex 原生 `model_catalog_json` 机制：通过 `model_list` 后缀语法（如 `deepseek-v4-pro[1M]`）声明每模型窗口，由 CodexPlusPlus 生成 catalog 文件并注入 config.toml 指针，codex 客户端运行时按模型识别各自窗口。
+当前基线固定为上游 `v1.2.37`。阶段 A 只迁移公开技术文档、UI 原型并验证 Windows 构建，不改变上游业务功能。后续阶段必须按 `docs/workstation/` 中的架构和安全边界实施。
 
 ## 仓库结构
 
 - `crates/codex-plus-core/` — 核心 Rust 库（配置生成、catalog 解析、数据模型）
 - `apps/codex-plus-manager/` — Tauri 桌面应用，前端 React+TS
 - `crates/codex-plus-data/` — 数据持久化
-- `docs/` — 本 fork 的设计文档、调研、计划
+- `docs/workstation/` — 便携工作站公开架构、安全、集成和更新设计
+- `prototype/workstation-launcher-ui/` — 已确认的静态 UI 交互原型
 
-## 关键代码位置
+## 工作站开发边界
 
-- 数据模型：`crates/codex-plus-core/src/settings.rs` 的 `RelayProfile` 结构体
-- 配置生成：`crates/codex-plus-core/src/relay_config.rs` 的 `apply_context_limits_to_config`
-- catalog 解析：`crates/codex-plus-core/src/model_catalog.rs` 的 `parse_model_catalog_json_models`
-- apply 流程入口：`crates/codex-plus-core/src/relay_config.rs` 的 `apply_relay_profile_to_home_with_switch_rules_and_computer_use_guard`
-- 前端模型列表：`apps/codex-plus-manager/src/App.tsx` 的 `modelList` textarea
+- 不写死 Windows 盘符，移动盘根目录必须从当前 EXE 位置推导。
+- `CODEX_HOME`、`CODEX_SQLITE_HOME`、`CODEXPP_HOME` 只对子进程设置。
+- 不修改 Windows 全局代理、路由表或永久环境变量。
+- 用户数据只归入移动盘 `Data/`、`Workspace/`、`Backups/`。
+- 不实现通用 VPN、任意目标代理或上游权限绕过。
+- 两套业务服务器在接入阶段前必须使用明确的 `NotConnected` Adapter。
 
 ## 安全规则
 
@@ -42,7 +44,7 @@
 
 - 对话用中文，代码可用英文，注释尽量中文
 - 保持上游代码风格统一（Rust 标准、React+TS）
-- 改动隔离 + opt-in，不破坏现有 per-profile 单值行为
+- 工作站改动隔离、opt-in，保持普通 Codex++ 安装模式兼容
 - 不做需求外的操作
 
 ## 测试约定
@@ -54,7 +56,7 @@
 ## 与上游同步
 
 - `upstream` = https://github.com/BigPizzaV3/CodexPlusPlus.git
-- `origin` = 用户自己的 GitHub fork（待创建）
-- feature 分支命名：`codex/per-model-context` 或类似
+- `origin` = https://github.com/JJames646/codex-portable-workstation.git
+- 阶段分支使用 `codex/` 前缀
 - 定期 `git fetch upstream && git rebase upstream/main` 保持同步
-- 目标：全栈完成后向主仓提 PR 合并
+- 每个发行二进制必须关联准确源码 commit/tag、构建说明、AGPL 许可证和第三方声明
