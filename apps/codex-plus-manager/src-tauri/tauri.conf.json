@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Codex++ Manager",
+  "productName": "Codex Portable Workstation",
   "version": "1.2.37",
   "identifier": "com.bigpizzav3.codexplusplus.manager",
   "build": {
@@ -14,9 +14,9 @@
       {
         "create": false,
         "label": "main",
-        "title": "Codex++ 管理工具",
-        "width": 1180,
-        "height": 820,
+        "title": "Codex 便携工作站",
+        "width": 1280,
+        "height": 860,
         "minWidth": 960,
         "minHeight": 720
       }

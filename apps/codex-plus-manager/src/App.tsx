@@ -24,11 +24,13 @@ import {
   CheckCircle2,
   CircleArrowUp,
   Copy,
+  Database,
   Download,
   Edit3,
   GripVertical,
   Info,
   ExternalLink,
+  FolderKanban,
   Hammer,
   KeyRound,
   Languages,
@@ -37,6 +39,7 @@ import {
   FileCode2,
   Moon,
   Network,
+  PlugZap,
   Power,
   PowerOff,
   Plus,
@@ -51,6 +54,7 @@ import {
   Sun,
   TestTube,
   Trash2,
+  Unplug,
   Wrench,
   type LucideIcon,
 } from "lucide-react";
@@ -73,8 +77,26 @@ import {
 } from "./model-windows";
 import { resolveProviderSyncCompletion } from "./provider-sync-flow";
 import { getLanguage, t, tf, toggleLanguage } from "@/i18n";
+import { ConnectionScreen } from "@/features/connection/ConnectionScreen";
+import { DataScreen } from "@/features/data/DataScreen";
+import { HomeScreen } from "@/features/home/HomeScreen";
+import { ProjectsScreen } from "@/features/projects/ProjectsScreen";
+import { UpdatesScreen } from "@/features/updates/UpdatesScreen";
+import {
+  ServiceDetailScreen,
+  WorkstationModuleLinks,
+  type WorkstationNavigationTarget,
+} from "@/features/workstation/components";
+import {
+  createInitialWorkstationSnapshot,
+  loadWorkstationSnapshot,
+  type WorkstationSnapshot,
+} from "@/lib/workstation-api";
 
 const isWindowsPlatform = /\bWindows\b/i.test(navigator.userAgent);
+const isTauriRuntime =
+  typeof window !== "undefined" &&
+  "__TAURI_INTERNALS__" in (window as unknown as Record<string, unknown>);
 
 type Status = "ok" | "failed" | "not_implemented" | "not_checked" | string;
 
@@ -684,22 +706,39 @@ type StartupResult = CommandResult<{
   showUpdate: boolean;
 }>;
 
-type Route = "overview" | "relay" | "relayEnvironment" | "sessions" | "context" | "enhance" | "zedRemote" | "userScripts" | "recommendations" | "maintenance" | "about" | "settings";
+type Route =
+  | "home"
+  | "relay"
+  | "projects"
+  | "sessions"
+  | "context"
+  | "enhance"
+  | "zedRemote"
+  | "data"
+  | "network"
+  | "updates"
+  | "maintenance"
+  | "settings"
+  | "serviceDetail"
+  | "relayEnvironment"
+  | "userScripts"
+  | "recommendations"
+  | "about";
 type Theme = "dark" | "light";
 
 const routes: Array<{ id: Route; label: string; icon: LucideIcon; badge?: string }> = [
-  { id: "overview", label: t("概览"), icon: LayoutDashboard },
+  { id: "home", label: t("首页"), icon: LayoutDashboard },
   { id: "relay", label: t("供应商配置"), icon: KeyRound },
-  { id: "sessions", label: t("会话管理"), icon: MessageCircle },
-  { id: "context", label: t("工具与插件"), icon: Network },
-  { id: "enhance", label: t("Codex增强"), icon: Hammer },
+  { id: "projects", label: t("项目管理"), icon: FolderKanban },
+  { id: "sessions", label: t("会话与绘画"), icon: MessageCircle },
+  { id: "context", label: t("工具与插件"), icon: PlugZap },
+  { id: "enhance", label: t("页面增强"), icon: Hammer },
   { id: "zedRemote", label: t("Zed 远程项目"), icon: ExternalLink },
-  { id: "userScripts", label: t("脚本市场"), icon: FileCode2 },
-  { id: "recommendations", label: t("推荐内容"), icon: ExternalLink },
+  { id: "data", label: t("数据与备份"), icon: Database },
+  { id: "network", label: t("网络环境配置"), icon: Network },
+  { id: "updates", label: t("更新中心"), icon: CircleArrowUp },
   { id: "maintenance", label: t("安装维护"), icon: Wrench },
-  { id: "about", label: t("关于"), icon: Info },
   { id: "settings", label: t("设置"), icon: Settings },
-  { id: "relayEnvironment", label: t("中转站环境配置检测"), icon: ShieldCheck },
 ];
 
 const defaultSettings: BackendSettings = {
@@ -799,6 +838,9 @@ export function App() {
     resolve: (selectedIds: string[] | null) => void;
   } | null>(null);
   const [overview, setOverview] = useState<OverviewResult | null>(null);
+  const [workstationSnapshot, setWorkstationSnapshot] =
+    useState<WorkstationSnapshot>(() => createInitialWorkstationSnapshot());
+  const [workstationLoading, setWorkstationLoading] = useState(false);
   const [settings, setSettings] = useState<SettingsResult | null>(null);
   const [relay, setRelay] = useState<RelayResult | null>(null);
   const [relayFiles, setRelayFiles] = useState<RelayFilesResult | null>(null);
@@ -859,8 +901,28 @@ export function App() {
     try {
       return await task();
     } catch (error) {
-      showNotice(t("调用失败"), stringifyError(error), "failed");
+      if (isTauriRuntime) {
+        showNotice(t("调用失败"), stringifyError(error), "failed");
+      }
       return null;
+    }
+  };
+
+  const refreshWorkstationSnapshot = async (silent = false) => {
+    setWorkstationLoading(true);
+    try {
+      const result = await loadWorkstationSnapshot();
+      setWorkstationSnapshot(result);
+      if (!silent && result.status !== "ok") {
+        showNotice(
+          t("工作站检测"),
+          result.errors[0] || t("部分本地数据暂不可用，请查看对应配置页面。"),
+          result.status === "unavailable" ? "failed" : "not_checked",
+        );
+      }
+      return result;
+    } finally {
+      setWorkstationLoading(false);
     }
   };
 
@@ -1204,51 +1266,68 @@ export function App() {
 
   const navigate = async (next: Route) => {
     setRoute(next);
-    if (next === "overview") await refreshOverview(true);
+    if (["home", "projects", "data", "network", "serviceDetail"].includes(next)) {
+      await refreshWorkstationSnapshot(true);
+    }
     if (next === "relay") {
-      await refreshSettings(true);
-      await refreshRelay(true);
-      await refreshRelayFiles(true);
-      await refreshEnvConflicts(true);
-      await refreshCcsProviders(true);
+      await Promise.all([
+        refreshSettings(true),
+        refreshRelay(true),
+        refreshRelayFiles(true),
+        refreshEnvConflicts(true),
+        refreshCcsProviders(true),
+      ]);
     }
     if (next === "relayEnvironment") await refreshRelayEnvironment(true);
     if (next === "sessions") {
-      await refreshSettings(true);
-      await refreshLocalSessions(true);
-      await refreshProviderSyncTargets(true);
+      await Promise.all([
+        refreshSettings(true),
+        refreshLocalSessions(true),
+        refreshProviderSyncTargets(true),
+      ]);
     }
     if (next === "zedRemote") {
-      await refreshSettings(true);
-      await refreshZedRemoteProjects(true);
+      await Promise.all([
+        refreshSettings(true),
+        refreshZedRemoteProjects(true),
+      ]);
     }
     if (next === "context") {
-      await refreshSettings(true);
-      await refreshRelayFiles(true);
-      await refreshLiveContextEntries(true);
+      await Promise.all([
+        refreshSettings(true),
+        refreshRelayFiles(true),
+        refreshLiveContextEntries(true),
+      ]);
     }
     if (next === "settings") await refreshSettings(true);
     if (next === "userScripts") {
-      await refreshSettings(true);
-      await refreshScriptMarket(true);
+      await Promise.all([
+        refreshSettings(true),
+        refreshScriptMarket(true),
+      ]);
     }
     if (next === "recommendations") await refreshAds(true);
     if (next === "about") {
-      await refreshOverview(true);
-      await refreshLogs(true);
-      await refreshDiagnostics(true);
+      await Promise.all([
+        refreshOverview(true),
+        refreshLogs(true),
+        refreshDiagnostics(true),
+      ]);
     }
     if (next === "maintenance") {
-      await refreshOverview(true);
-      await refreshWatcher(true);
+      await Promise.all([refreshOverview(true), refreshWatcher(true)]);
     }
+    if (next === "updates") await checkUpdate(true);
   };
 
   const launch = async () => {
     const result = await launchCommand("launch_codex_plus");
     if (result) {
       showNotice(t("启动任务"), result.message, result.status);
-      await refreshOverview(true);
+      await Promise.all([
+        refreshOverview(true),
+        refreshWorkstationSnapshot(true),
+      ]);
     }
   };
 
@@ -1936,20 +2015,25 @@ export function App() {
 
   useEffect(() => {
     void (async () => {
-      const startup = await run(() => call<StartupResult>("startup_options"));
+      const startupPromise = run(() => call<StartupResult>("startup_options"));
+      const initialRefresh = Promise.all([
+        refreshOverview(true),
+        refreshSettings(true),
+        refreshRelay(true),
+        refreshEnvConflicts(true),
+        refreshProviderSyncTargets(true),
+        refreshPendingProviderImport(true),
+        refreshRemotePluginMarketplace(true),
+        refreshWorkstationSnapshot(true),
+      ]);
+      const startup = await startupPromise;
       if (startup?.showUpdate) {
-        setRoute("about");
+        setRoute("updates");
         void checkUpdate(false);
       } else {
         void checkUpdate(true);
       }
-      await refreshOverview(true);
-      await refreshSettings(true);
-      await refreshRelay(true);
-      await refreshEnvConflicts(true);
-      await refreshProviderSyncTargets(true);
-      await refreshPendingProviderImport(true);
-      await refreshRemotePluginMarketplace(true);
+      await initialRefresh;
     })();
   }, []);
 
@@ -1958,7 +2042,7 @@ export function App() {
       void invoke("update_tray_labels", {
         showLabel: "Show window",
         quitLabel: "Quit",
-        windowTitle: "Codex++ Manager",
+        windowTitle: "Codex Portable Workstation",
       });
     }
   }, []);
@@ -2149,14 +2233,21 @@ export function App() {
     <div className={`shell ${theme}`}>
       <aside className="sidebar">
         <div className="brand">
+          <div className="workstation-brand-mark" aria-label={t("Codex 图标")}>
+            <svg aria-hidden="true" role="img" viewBox="0 0 48 48">
+              <path d="M24 5.5 39.8 14.7v18.6L24 42.5 8.2 33.3V14.7L24 5.5Z" />
+              <path d="M24 13.2 33.1 18.5v10.9L24 34.8 14.9 29.4V18.5L24 13.2Z" />
+              <path d="M24 5.5v7.7m15.8 1.5-6.7 3.8M8.2 14.7l6.7 3.8M24 42.5v-7.7m15.8-1.5-6.7-3.9M8.2 33.3l6.7-3.9" />
+            </svg>
+          </div>
           <div className="brand-copy">
             <div className="brand-title-row">
-              <div className="brand-title">Codex++</div>
+              <div className="brand-title">{t("Codex 便携工作站")}</div>
               {hasUpdate ? (
                 <button
                   className="update-dot"
                   onClick={() => {
-                    setRoute("about");
+                    setRoute("updates");
                     void checkUpdate(false);
                   }}
                   title={tf("发现新版本 {0}", [update?.latestVersion ?? ""])}
@@ -2166,7 +2257,7 @@ export function App() {
                 </button>
               ) : null}
             </div>
-            <div className="brand-subtitle">{t("管理控制台")}</div>
+            <div className="brand-subtitle">{t("您的移动工作站")}</div>
           </div>
         </div>
         <nav className="nav">
@@ -2189,6 +2280,12 @@ export function App() {
           );
           })}
         </nav>
+        <div className="workstation-sidebar-footer">
+          <div className="workstation-portable-state">
+            <i />
+            <span>{t("便携路径待阶段 C 配置")}</span>
+          </div>
+        </div>
       </aside>
       <main className="workspace">
         <header className="topbar" key={`topbar-${route}`}>
@@ -2213,22 +2310,40 @@ export function App() {
             >
               {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </Button>
-            <Button onClick={() => void actions.restart()} title={t("重启 Codex++")} variant="outline">
-              <Rocket className="h-4 w-4" />
-              {t("重启 Codex++")}
-            </Button>
-            <Button onClick={() => void actions.refreshCurrent()} size="icon" title={t("刷新当前页面")} variant="outline">
+            <Button onClick={() => void actions.refreshCurrent()} title={t("重新检测")} variant="outline">
               <RefreshCw className="h-4 w-4" />
+              {t("重新检测")}
+            </Button>
+            <Button onClick={() => void actions.launch()} title={t("启动 Codex")}>
+              <Power className="h-4 w-4" />
+              {t("启动 Codex")}
+            </Button>
+            <Button
+              className="workstation-top-stop"
+              disabled
+              title={t("阶段 D 接入受控停止")}
+              variant="outline"
+            >
+              <PowerOff className="h-4 w-4" />
+              {t("停止")}
+            </Button>
+            <Button disabled title={t("阶段 D/G 接入安全弹出")} variant="outline">
+              <Unplug className="h-4 w-4" />
+              {t("弹出 U盘")}
             </Button>
           </div>
         </header>
         <section className="screen" key={route}>
-          {route === "overview" ? (
-            <OverviewScreen
-              overview={overview}
-              pluginMarketplaceProgress={pluginMarketplaceProgress}
-              actions={actions}
+          {route === "home" ? (
+            <HomeScreen
+              loading={workstationLoading}
+              onNavigate={(next) => void navigate(next as Route)}
+              onRefresh={() => void refreshWorkstationSnapshot(false)}
+              snapshot={workstationSnapshot}
             />
+          ) : null}
+          {route === "projects" ? (
+            <ProjectsScreen snapshot={workstationSnapshot} />
           ) : null}
           {route === "relay" ? (
             <RelayScreen
@@ -2257,13 +2372,20 @@ export function App() {
             />
           ) : null}
           {route === "context" ? (
-            <ContextScreen
-              form={settingsForm}
-              liveEntries={liveContextEntries}
-              relayFiles={relayFiles}
-              onFormChange={setSettingsForm}
-              actions={actions}
-            />
+            <>
+              <WorkstationModuleLinks
+                onNavigate={(next: WorkstationNavigationTarget) =>
+                  void navigate(next as Route)
+                }
+              />
+              <ContextScreen
+                actions={actions}
+                form={settingsForm}
+                liveEntries={liveContextEntries}
+                onFormChange={setSettingsForm}
+                relayFiles={relayFiles}
+              />
+            </>
           ) : null}
           {route === "enhance" ? (
             <EnhanceScreen
@@ -2277,6 +2399,22 @@ export function App() {
           ) : null}
           {route === "zedRemote" ? (
             <ZedRemoteScreen projects={zedRemoteProjects} form={settingsForm} onFormChange={setSettingsForm} actions={actions} />
+          ) : null}
+          {route === "data" ? (
+            <DataScreen snapshot={workstationSnapshot} />
+          ) : null}
+          {route === "network" ? (
+            <ConnectionScreen snapshot={workstationSnapshot} />
+          ) : null}
+          {route === "updates" ? (
+            <UpdatesScreen
+              onCheck={() => void checkUpdate(false)}
+              onOpenLegacyDetails={() => void navigate("about")}
+              update={update}
+            />
+          ) : null}
+          {route === "serviceDetail" ? (
+            <ServiceDetailScreen onBack={() => void navigate("home")} />
           ) : null}
           {route === "userScripts" ? <UserScriptsScreen settings={settings} market={scriptMarket} actions={actions} /> : null}
           {route === "recommendations" ? <RecommendationsScreen ads={ads} actions={actions} /> : null}
@@ -5610,23 +5748,35 @@ function isExpiredAd(ad: AdItem) {
 }
 
 function routeTitle(route: Route) {
-  return routes.find((item) => item.id === route)?.label ?? t("概览");
+  const hiddenTitles: Partial<Record<Route, string>> = {
+    serviceDetail: t("中转站详情"),
+    relayEnvironment: t("环境冲突检测"),
+    userScripts: t("脚本市场"),
+    recommendations: t("推荐内容"),
+    about: t("日志、诊断与原更新详情"),
+  };
+  return routes.find((item) => item.id === route)?.label ?? hiddenTitles[route] ?? t("首页");
 }
 
 function routeSubtitle(route: Route) {
   const subtitles: Record<Route, string> = {
-    overview: t("检查问题、启动与快速修复"),
+    home: t("Codex++ 本地概览、工作站状态和环境校验"),
     relay: t("管理 API 供应商、协议、Key 与配置文件"),
+    projects: t("根据本地会话 cwd 聚合真实项目"),
     relayEnvironment: t("排查可能干扰中转站配置的本机环境"),
-    sessions: t("查看、删除和修复 Codex 本地会话"),
-    context: t("独立管理 MCP、Skills、Plugins"),
-    enhance: t("会话删除、导出、项目移动和脚本能力"),
+    sessions: t("查看、删除、修复 Codex 本地会话和关联内容"),
+    context: t("管理 MCP、Skills、Plugins 和 Codex++ 扩展入口"),
+    enhance: t("页面注入、会话操作、项目移动和增强能力"),
     zedRemote: t("管理 Codex SSH 项目并加入 Zed workspace"),
+    data: t("查看真实本地数据位置和便携迁移准备状态"),
+    network: t("工作站专用服务连接，当前保持未接入"),
+    updates: t("工作站签名更新源预留和 Codex++ 上游更新参考"),
     userScripts: t("内置和用户自定义脚本清单"),
     recommendations: t("赞助商推荐与普通推荐"),
     maintenance: t("入口安装、修复、Watcher 与手动启动"),
     about: t("版本信息、项目链接、GitHub Release 更新、日志与诊断"),
     settings: t("主题和启动参数"),
+    serviceDetail: t("完整中转站网站的隔离承载区域，当前留空"),
   };
   return subtitles[route];
 }
@@ -7323,10 +7473,10 @@ function loadInitialTheme(): Theme {
 }
 
 function loadInitialRoute(): Route {
-  if (typeof window === "undefined") return "overview";
+  if (typeof window === "undefined") return "home";
   const params = new URLSearchParams(window.location.search);
   if (params.get("showUpdate") === "1" || window.location.hash === "#about") {
-    return "about";
+    return "updates";
   }
-  return "overview";
+  return "home";
 }

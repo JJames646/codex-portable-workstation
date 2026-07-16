@@ -298,10 +298,10 @@ fn manager_window_and_relay_detail_header_stay_usable() {
     assert!(styles.contains("position: sticky"));
     assert!(styles.contains("top: 0"));
     assert!(styles.contains("margin: 0"));
-    assert!(lib_rs.contains(".inner_size(1180.0, 820.0)"));
+    assert!(lib_rs.contains(".inner_size(1280.0, 860.0)"));
     assert!(lib_rs.contains(".min_inner_size(960.0, 720.0)"));
-    assert!(tauri_conf.contains("\"width\": 1180"));
-    assert!(tauri_conf.contains("\"height\": 820"));
+    assert!(tauri_conf.contains("\"width\": 1280"));
+    assert!(tauri_conf.contains("\"height\": 860"));
     assert!(tauri_conf.contains("\"minWidth\": 960"));
     assert!(tauri_conf.contains("\"minHeight\": 720"));
 }
