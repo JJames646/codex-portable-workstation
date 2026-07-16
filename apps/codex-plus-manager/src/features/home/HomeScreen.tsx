@@ -1,12 +1,14 @@
 import {
-  Box,
-  Boxes,
-  FolderKanban,
+  Activity,
+  CircleDollarSign,
   Gauge,
   KeyRound,
-  PlugZap,
+  LogIn,
+  LogOut,
+  RefreshCw,
+  WalletCards,
 } from "lucide-react";
-import type { ReactNode } from "react";
+import { useState, type FormEvent, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
 import { t } from "@/i18n";
@@ -15,35 +17,103 @@ import {
   EnvironmentRow,
   MetricCard,
   SectionCard,
-  ServiceAdapterRow,
   StatusPill,
   type WorkstationNavigationTarget,
 } from "@/features/workstation/components";
 
+export type RelayDashboardStats = {
+  total_api_keys: number;
+  active_api_keys: number;
+  total_requests: number;
+  total_tokens: number;
+  total_actual_cost: number;
+  today_requests: number;
+  today_tokens: number;
+  today_actual_cost: number;
+  average_duration_ms: number;
+  rpm: number;
+  tpm: number;
+};
+
+export type RelayTrendPoint = {
+  date: string;
+  requests: number;
+  total_tokens: number;
+  actual_cost: number;
+};
+
+export type RelaySubscriptionItem = {
+  group_name: string;
+  status: string;
+  daily_used_usd: number;
+  daily_limit_usd: number;
+  weekly_used_usd: number;
+  weekly_limit_usd: number;
+  monthly_used_usd: number;
+  monthly_limit_usd: number;
+  expires_at: string | null;
+};
+
+export type RelayDashboardResult = {
+  status: string;
+  message: string;
+  configured: boolean;
+  authStatus: "required" | "authenticated" | "unavailable" | string;
+  accountLabel: string | null;
+  balance: number;
+  stats: RelayDashboardStats | null;
+  trend: RelayTrendPoint[];
+  models: Array<{
+    model: string;
+    requests: number;
+    total_tokens: number;
+    actual_cost: number;
+  }>;
+  subscription: {
+    active_count: number;
+    total_used_usd: number;
+    subscriptions: RelaySubscriptionItem[];
+  } | null;
+};
+
 export function HomeScreen({
   snapshot,
-  loading,
   onNavigate,
+  relayDashboard,
+  relayLoading,
+  onRelayLogin,
+  onRelayLogout,
+  onRelayRefresh,
 }: {
   snapshot: WorkstationSnapshot;
-  loading: boolean;
   onNavigate: (route: WorkstationNavigationTarget) => void;
+  relayDashboard: RelayDashboardResult | null;
+  relayLoading: boolean;
+  onRelayLogin: (email: string, password: string) => Promise<boolean>;
+  onRelayLogout: () => void;
+  onRelayRefresh: () => void;
 }) {
+  const [relayEmail, setRelayEmail] = useState("");
+  const [relayPassword, setRelayPassword] = useState("");
   const launch = snapshot.overview?.latest_launch;
   const codexRunning = launch?.status === "running";
-  const activeProvider = activeProviderName(snapshot);
   const workspace = snapshot.sessions.find((session) => session.cwd.trim())?.cwd;
-  const projectCount = new Set(
-    snapshot.sessions
-      .map((session) => session.cwd.trim())
-      .filter(Boolean),
-  ).size;
-  const activityBars = buildActivityBars(snapshot);
+  const relayAuthenticated =
+    relayDashboard?.authStatus === "authenticated" &&
+    relayDashboard.stats !== null;
+  const relayStats = relayDashboard?.stats;
+  const quota = selectRelayQuota(relayDashboard);
+  const usageBars = buildRelayUsageBars(relayDashboard?.trend ?? []);
   const relayEnvironmentHealthy =
     snapshot.relayEnvironment !== null &&
     !snapshot.relayEnvironment.clashVergeTun.enabled &&
     snapshot.relayEnvironment.proxyEnvironment.variables.length === 0 &&
     !snapshot.relayEnvironment.codexEnvFile.exists;
+  const submitRelayLogin = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const loggedIn = await onRelayLogin(relayEmail, relayPassword);
+    if (loggedIn) setRelayPassword("");
+  };
 
   return (
     <div className="workstation-page">
@@ -69,13 +139,17 @@ export function HomeScreen({
       <section className="workstation-home-grid">
         <SectionCard
           action={
-            <Button onClick={() => onNavigate("serviceDetail")} size="sm">
+            <Button
+              disabled={!relayAuthenticated}
+              onClick={() => onNavigate("serviceDetail")}
+              size="sm"
+            >
               {t("查看详情")}
             </Button>
           }
           className="workstation-dashboard-card"
-          detail={t("数据直接来自 Codex++ 本地 Overview、设置、会话和扩展接口")}
-          title={t("Codex++ 概览仪表盘")}
+          detail={t("登录后自动读取当前中转站账号的余额、用量和套餐额度")}
+          title={t("中转站用量仪表盘")}
         >
           <div className="workstation-dashboard-frame">
             <div className="workstation-dashboard-head">
@@ -84,75 +158,149 @@ export function HomeScreen({
                   <Gauge className="h-5 w-5" />
                 </span>
                 <div>
-                  <strong>{t("Codex++ 能力与工作站状态")}</strong>
-                  <small>{t("无需登录账号，直接读取当前 Codex++ 本地数据。")}</small>
+                  <strong>
+                    {relayAuthenticated
+                      ? relayDashboard?.accountLabel || t("当前账号")
+                      : t("需要登录中转站")}
+                  </strong>
+                  <small>
+                    {relayAuthenticated
+                      ? t("数据来自当前账号的 Sub2API 用户接口。")
+                      : t("登录后才显示个人消耗额度，未登录不会读取任何用户数据。")}
+                  </small>
                 </div>
               </div>
-              <StatusPill tone={snapshot.status === "ok" ? "ok" : "warning"}>
-                {loading
-                  ? t("检测中")
-                  : snapshot.status === "ok"
-                    ? t("本地数据正常")
-                    : t("部分数据不可用")}
+              <StatusPill tone={relayAuthenticated ? "ok" : "warning"}>
+                {relayLoading
+                  ? t("读取中")
+                  : relayAuthenticated
+                    ? t("已登录")
+                    : t("需要登录")}
               </StatusPill>
             </div>
-            <div className="workstation-dashboard-metrics">
-              <DashboardMetric
-                icon={<Box className="h-4 w-4" />}
-                label={t("Codex 版本")}
-                value={snapshot.overview?.codex_version || t("未检测到")}
-              />
-              <DashboardMetric
-                icon={<FolderKanban className="h-4 w-4" />}
-                label={t("项目与会话")}
-                value={`${projectCount} / ${snapshot.sessions.length}`}
-              />
-              <DashboardMetric
-                icon={<KeyRound className="h-4 w-4" />}
-                label={t("供应商")}
-                value={activeProvider}
-              />
-            </div>
-            <div className="workstation-usage-strip">
-              <div>
-                <PlugZap className="h-4 w-4" />
-                <span>{t("插件")}</span>
-                <strong>{snapshot.contextCounts.plugins}</strong>
-              </div>
-              <div>
-                <Boxes className="h-4 w-4" />
-                <span>{t("Skills")}</span>
-                <strong>{snapshot.contextCounts.skills}</strong>
-              </div>
-              <div>
-                <FolderKanban className="h-4 w-4" />
-                <span>{t("会话索引")}</span>
-                <strong>{snapshot.sessions.length ? t("正常") : t("暂无")}</strong>
-              </div>
-              <div>
-                <FolderKanban className="h-4 w-4" />
-                <span>{t("远程项目")}</span>
-                <strong>{snapshot.zedProjectCount}</strong>
-              </div>
-            </div>
-            <div
-              aria-label={t("最近十二天会话活动")}
-              className="workstation-activity-chart"
-            >
-              {activityBars.map((bar) => (
-                <i
-                  key={bar.label}
-                  style={{ height: `${bar.height}%` }}
-                  title={`${bar.label} · ${bar.count}`}
-                />
-              ))}
-            </div>
-          </div>
-          <div className="workstation-service-list">
-            <ServiceAdapterRow
-              adapter={snapshot.services.relay}
-              onOpen={() => onNavigate("serviceDetail")}
-            />
+            {relayAuthenticated ? (
+              <>
+                <div className="workstation-dashboard-metrics">
+                  <DashboardMetric
+                    icon={<WalletCards className="h-4 w-4" />}
+                    label={t("可用余额")}
+                    value={formatMoney(relayDashboard?.balance ?? 0)}
+                  />
+                  <DashboardMetric
+                    icon={<Activity className="h-4 w-4" />}
+                    label={t("今日请求")}
+                    value={formatCount(relayStats?.today_requests ?? 0)}
+                  />
+                  <DashboardMetric
+                    icon={<CircleDollarSign className="h-4 w-4" />}
+                    label={t("今日实际消耗")}
+                    value={formatMoney(relayStats?.today_actual_cost ?? 0)}
+                  />
+                </div>
+                <div className="workstation-usage-strip">
+                  <div>
+                    <Gauge className="h-4 w-4" />
+                    <span>{t("今日 Tokens")}</span>
+                    <strong>{formatCompact(relayStats?.today_tokens ?? 0)}</strong>
+                  </div>
+                  <div>
+                    <CircleDollarSign className="h-4 w-4" />
+                    <span>{t("累计消耗")}</span>
+                    <strong>{formatMoney(relayStats?.total_actual_cost ?? 0)}</strong>
+                  </div>
+                  <div>
+                    <KeyRound className="h-4 w-4" />
+                    <span>{t("API Keys")}</span>
+                    <strong>
+                      {relayStats?.active_api_keys ?? 0}/{relayStats?.total_api_keys ?? 0}
+                    </strong>
+                  </div>
+                  <div>
+                    <RefreshCw className="h-4 w-4" />
+                    <span>{t("近 5 分钟")}</span>
+                    <strong>{relayStats?.rpm ?? 0} RPM</strong>
+                  </div>
+                </div>
+                <div className="workstation-relay-quota">
+                  <div>
+                    <span>{quota.label}</span>
+                    <strong>
+                      {formatMoney(quota.used)} / {quota.limit > 0 ? formatMoney(quota.limit) : t("不限额")}
+                    </strong>
+                  </div>
+                  <div className="workstation-relay-quota-track">
+                    <i style={{ width: `${quota.percent}%` }} />
+                  </div>
+                  <small>
+                    {quota.expiresAt
+                      ? `${t("到期时间")}：${formatDate(quota.expiresAt)}`
+                      : t("当前套餐未返回到期时间")}
+                  </small>
+                </div>
+                <div
+                  aria-label={t("个人消耗趋势")}
+                  className="workstation-activity-chart workstation-relay-usage-chart"
+                >
+                  {usageBars.map((bar) => (
+                    <i
+                      key={bar.label}
+                      style={{ height: `${bar.height}%` }}
+                      title={`${bar.label} · ${formatMoney(bar.cost)} · ${formatCompact(bar.tokens)} Tokens`}
+                    />
+                  ))}
+                </div>
+                <div className="workstation-relay-dashboard-actions">
+                  <Button onClick={onRelayRefresh} size="sm" variant="outline">
+                    <RefreshCw className="h-4 w-4" />
+                    {t("刷新用量")}
+                  </Button>
+                  <Button onClick={onRelayLogout} size="sm" variant="outline">
+                    <LogOut className="h-4 w-4" />
+                    {t("退出中转站")}
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <form
+                className="workstation-relay-login"
+                onSubmit={submitRelayLogin}
+              >
+                <span className="workstation-relay-login-icon">
+                  <LogIn className="h-6 w-6" />
+                </span>
+                <div>
+                  <strong>{t("登录后查看个人消耗额度")}</strong>
+                  <p>{t("账号密码只用于本次登录，密码不会保存到工作站。")}</p>
+                </div>
+                <label>
+                  <span>{t("邮箱")}</span>
+                  <input
+                    autoComplete="username"
+                    onChange={(event) => setRelayEmail(event.target.value)}
+                    placeholder={t("请输入中转站邮箱")}
+                    type="email"
+                    value={relayEmail}
+                  />
+                </label>
+                <label>
+                  <span>{t("密码")}</span>
+                  <input
+                    autoComplete="current-password"
+                    onChange={(event) => setRelayPassword(event.target.value)}
+                    placeholder={t("请输入中转站密码")}
+                    type="password"
+                    value={relayPassword}
+                  />
+                </label>
+                <Button
+                  disabled={relayLoading || !relayEmail || !relayPassword}
+                  type="submit"
+                >
+                  <LogIn className="h-4 w-4" />
+                  {relayLoading ? t("登录中") : t("登录中转站")}
+                </Button>
+              </form>
+            )}
           </div>
         </SectionCard>
 
@@ -227,34 +375,6 @@ export function HomeScreen({
   );
 }
 
-function buildActivityBars(snapshot: WorkstationSnapshot) {
-  const dayMs = 24 * 60 * 60 * 1000;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const counts = Array.from({ length: 12 }, () => 0);
-
-  for (const session of snapshot.sessions) {
-    if (!session.updatedAtMs) continue;
-    const age = Math.floor(
-      (today.getTime() - new Date(session.updatedAtMs).setHours(0, 0, 0, 0)) /
-        dayMs,
-    );
-    if (age >= 0 && age < counts.length) {
-      counts[counts.length - 1 - age] += 1;
-    }
-  }
-
-  const max = Math.max(...counts, 1);
-  return counts.map((count, index) => {
-    const day = new Date(today.getTime() - (counts.length - 1 - index) * dayMs);
-    return {
-      count,
-      height: count ? Math.max(18, Math.round((count / max) * 100)) : 8,
-      label: day.toLocaleDateString("zh-CN"),
-    };
-  });
-}
-
 function DashboardMetric({
   icon,
   label,
@@ -273,11 +393,88 @@ function DashboardMetric({
   );
 }
 
-function activeProviderName(snapshot: WorkstationSnapshot): string {
-  const settings = snapshot.settings?.settings;
-  if (!settings) return t("未加载");
-  const active = settings.relayProfiles.find(
-    (profile) => profile.id === settings.activeRelayId,
+function buildRelayUsageBars(trend: RelayTrendPoint[]) {
+  const points = trend.slice(-12);
+  const normalized = points.length
+    ? points
+    : Array.from({ length: 12 }, (_, index) => ({
+        date: `${index + 1}`,
+        requests: 0,
+        total_tokens: 0,
+        actual_cost: 0,
+      }));
+  const max = Math.max(
+    ...normalized.map((point) => point.actual_cost || point.total_tokens),
+    1,
   );
-  return active?.name || t("未配置");
+  return normalized.map((point) => {
+    const value = point.actual_cost || point.total_tokens;
+    return {
+      label: point.date,
+      cost: point.actual_cost,
+      tokens: point.total_tokens,
+      height: value ? Math.max(14, Math.round((value / max) * 100)) : 8,
+    };
+  });
+}
+
+function selectRelayQuota(relay: RelayDashboardResult | null) {
+  const item = relay?.subscription?.subscriptions[0];
+  if (!item) {
+    return {
+      label: t("当前套餐额度"),
+      used: relay?.subscription?.total_used_usd ?? 0,
+      limit: 0,
+      percent: 0,
+      expiresAt: null as string | null,
+    };
+  }
+  const windows = [
+    {
+      label: t("月度套餐额度"),
+      used: item.monthly_used_usd,
+      limit: item.monthly_limit_usd,
+    },
+    {
+      label: t("每周套餐额度"),
+      used: item.weekly_used_usd,
+      limit: item.weekly_limit_usd,
+    },
+    {
+      label: t("每日套餐额度"),
+      used: item.daily_used_usd,
+      limit: item.daily_limit_usd,
+    },
+  ];
+  const selected = windows.find((window) => window.limit > 0) ?? windows[0];
+  return {
+    ...selected,
+    percent:
+      selected.limit > 0
+        ? Math.min(100, Math.max(0, (selected.used / selected.limit) * 100))
+        : 0,
+    expiresAt: item.expires_at,
+  };
+}
+
+function formatMoney(value: number) {
+  return `$${Number.isFinite(value) ? value.toFixed(value >= 100 ? 0 : 2) : "0.00"}`;
+}
+
+function formatCount(value: number) {
+  return new Intl.NumberFormat("zh-CN").format(value || 0);
+}
+
+function formatCompact(value: number) {
+  return new Intl.NumberFormat("zh-CN", {
+    notation: "compact",
+    maximumFractionDigits: 1,
+  }).format(value || 0);
+}
+
+function formatDate(value: string) {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime())
+    ? value
+    : date.toLocaleDateString("zh-CN");
 }

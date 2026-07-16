@@ -1,5 +1,6 @@
 pub mod commands;
 pub mod install;
+pub mod relay_preview;
 
 use std::sync::atomic::{AtomicBool, Ordering};
 
@@ -80,6 +81,10 @@ pub fn run() {
             commands::set_user_script_enabled,
             commands::delete_user_script,
             commands::open_external_url,
+            relay_preview::relay_dashboard_status,
+            relay_preview::relay_login,
+            relay_preview::relay_logout,
+            relay_preview::open_relay_preview,
             commands::install_entrypoints,
             commands::uninstall_entrypoints,
             commands::repair_shortcuts,

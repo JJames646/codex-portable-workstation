@@ -425,6 +425,40 @@ body {
   font-size: 14px;
 }
 
+.workstation-relay-quota {
+  margin: 0 16px 12px;
+  border-color: var(--prototype-line);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.workstation-relay-quota span,
+.workstation-relay-quota small {
+  color: var(--prototype-muted);
+  font-size: 11px;
+}
+
+.workstation-relay-login {
+  border-color: rgba(92, 200, 255, 0.18);
+  background:
+    radial-gradient(circle at top right, rgba(92, 200, 255, 0.12), transparent 38%),
+    rgba(255, 255, 255, 0.035);
+}
+
+.workstation-relay-login p,
+.workstation-relay-login label > span {
+  color: var(--prototype-muted);
+}
+
+.workstation-relay-login input {
+  border-color: var(--prototype-line);
+  background: rgba(0, 0, 0, 0.18);
+  color: var(--prototype-text);
+}
+
+.shell.light .workstation-relay-login input {
+  background: rgba(255, 255, 255, 0.72);
+}
+
 .workstation-activity-chart {
   display: grid;
   grid-template-columns: repeat(12, 1fr);

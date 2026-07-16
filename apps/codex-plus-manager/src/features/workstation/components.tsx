@@ -4,6 +4,7 @@ import {
   CircleCheck,
   CloudOff,
   ExternalLink,
+  MonitorCheck,
   FileCode2,
   Info,
   Network,
@@ -260,8 +261,10 @@ export function WorkstationModuleLinks({
 
 export function ServiceDetailScreen({
   onBack,
+  onOpen,
 }: {
   onBack: () => void;
+  onOpen: () => void;
 }) {
   return (
     <div className="workstation-page">
@@ -270,17 +273,26 @@ export function ServiceDetailScreen({
           <ArrowLeft className="h-4 w-4" />
           {t("返回启动器")}
         </Button>
-        <StatusPill tone="warning">{t("服务器未接入")}</StatusPill>
+        <StatusPill tone="ok">{t("本地预览已接入")}</StatusPill>
       </div>
-      <section className="workstation-empty-webview">
+      <section className="workstation-empty-webview workstation-preview-ready">
         <div>
-          <CloudOff className="h-9 w-9" />
-          <h2>{t("中转站详情页预留区")}</h2>
+          <span className="workstation-preview-icon">
+            <MonitorCheck className="h-9 w-9" />
+          </span>
+          <h2>{t("中转站已在安全窗口中打开")}</h2>
           <p>
             {t(
-              "阶段 B 不加载远程网站。后续提供正式服务器地址后，这里将使用隔离 WebView 或系统浏览器打开完整网站。",
+              "该网站禁止 iframe，因此工作站使用独立 WebView 承载。远程页面没有文件、进程、更新或凭据权限。",
             )}
           </p>
+          <Button onClick={onOpen}>
+            <ExternalLink className="h-4 w-4" />
+            {t("重新打开或聚焦中转站")}
+          </Button>
+          <small>
+            {t("当前连接局域网用户仪表盘；管理员后台保持独立，不会出现在客户端。")}
+          </small>
         </div>
       </section>
     </div>

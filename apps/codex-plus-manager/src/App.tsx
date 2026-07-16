@@ -80,7 +80,10 @@ import { shouldPromptForUpdate } from "./update-policy";
 import { getLanguage, t, tf, toggleLanguage } from "@/i18n";
 import { ConnectionScreen } from "@/features/connection/ConnectionScreen";
 import { DataScreen } from "@/features/data/DataScreen";
-import { HomeScreen } from "@/features/home/HomeScreen";
+import {
+  HomeScreen,
+  type RelayDashboardResult,
+} from "@/features/home/HomeScreen";
 import { ProjectsScreen } from "@/features/projects/ProjectsScreen";
 import { UpdatesScreen } from "@/features/updates/UpdatesScreen";
 import {
@@ -846,6 +849,9 @@ export function App() {
   const [workstationSnapshot, setWorkstationSnapshot] =
     useState<WorkstationSnapshot>(() => createInitialWorkstationSnapshot());
   const [workstationLoading, setWorkstationLoading] = useState(false);
+  const [relayDashboard, setRelayDashboard] =
+    useState<RelayDashboardResult | null>(null);
+  const [relayDashboardLoading, setRelayDashboardLoading] = useState(false);
   const [settings, setSettings] = useState<SettingsResult | null>(null);
   const [relay, setRelay] = useState<RelayResult | null>(null);
   const [relayFiles, setRelayFiles] = useState<RelayFilesResult | null>(null);
@@ -931,6 +937,25 @@ export function App() {
       return result;
     } finally {
       setWorkstationLoading(false);
+    }
+  };
+
+  const refreshRelayDashboard = async (silent = false) => {
+    if (!isTauriRuntime) return null;
+    setRelayDashboardLoading(true);
+    try {
+      const result = await run(() =>
+        call<RelayDashboardResult>("relay_dashboard_status"),
+      );
+      if (result) {
+        setRelayDashboard(result);
+        if (!silent && !isSuccessStatus(result.status)) {
+          showResultNotice(t("中转站用量"), result);
+        }
+      }
+      return result;
+    } finally {
+      setRelayDashboardLoading(false);
     }
   };
 
@@ -1274,8 +1299,14 @@ export function App() {
 
   const navigate = async (next: Route) => {
     setRoute(next);
+    if (next === "serviceDetail" && isTauriRuntime) {
+      await openRelayPreview();
+    }
     if (["home", "projects", "data", "network", "serviceDetail"].includes(next)) {
       await refreshWorkstationSnapshot(true);
+    }
+    if (next === "home") {
+      await refreshRelayDashboard(true);
     }
     if (next === "relay") {
       await Promise.all([
@@ -2036,6 +2067,50 @@ export function App() {
     }
   };
 
+  const openRelayPreview = async () => {
+    const result = await run(() =>
+      call<RelayDashboardResult>("open_relay_preview"),
+    );
+    if (result) {
+      showResultNotice(t("中转站预览"), result, { silentSuccess: true });
+    }
+  };
+
+  const loginRelay = async (email: string, password: string) => {
+    setRelayDashboardLoading(true);
+    try {
+      const result = await run(() =>
+        call<RelayDashboardResult>("relay_login", {
+          request: { email, password },
+        }),
+      );
+      if (!result) return false;
+      setRelayDashboard(result);
+      showResultNotice(t("中转站登录"), result, { silentSuccess: true });
+      return (
+        isSuccessStatus(result.status) &&
+        result.authStatus === "authenticated"
+      );
+    } finally {
+      setRelayDashboardLoading(false);
+    }
+  };
+
+  const logoutRelay = async () => {
+    setRelayDashboardLoading(true);
+    try {
+      const result = await run(() =>
+        call<RelayDashboardResult>("relay_logout"),
+      );
+      if (result) {
+        setRelayDashboard(result);
+        showResultNotice(t("中转站登录"), result, { silentSuccess: true });
+      }
+    } finally {
+      setRelayDashboardLoading(false);
+    }
+  };
+
   const showNotice = (title: string, message: string, status?: Status) => {
     setNotice({ title, message: t(message), status });
   };
@@ -2072,6 +2147,7 @@ export function App() {
         refreshPendingProviderImport(true),
         refreshRemotePluginMarketplace(true),
         refreshWorkstationSnapshot(true),
+        refreshRelayDashboard(true),
       ]);
       const startup = await startupPromise;
       const updatePreferences = await updatePreferencesPromise;
@@ -2388,8 +2464,12 @@ export function App() {
         <section className="screen" key={route}>
           {route === "home" ? (
             <HomeScreen
-              loading={workstationLoading}
               onNavigate={(next) => void navigate(next as Route)}
+              onRelayLogin={loginRelay}
+              onRelayLogout={() => void logoutRelay()}
+              onRelayRefresh={() => void refreshRelayDashboard()}
+              relayDashboard={relayDashboard}
+              relayLoading={relayDashboardLoading}
               snapshot={workstationSnapshot}
             />
           ) : null}
@@ -2467,7 +2547,10 @@ export function App() {
             />
           ) : null}
           {route === "serviceDetail" ? (
-            <ServiceDetailScreen onBack={() => void navigate("home")} />
+            <ServiceDetailScreen
+              onBack={() => void navigate("home")}
+              onOpen={() => void openRelayPreview()}
+            />
           ) : null}
           {route === "userScripts" ? <UserScriptsScreen settings={settings} market={scriptMarket} actions={actions} /> : null}
           {route === "recommendations" ? <RecommendationsScreen ads={ads} actions={actions} /> : null}
