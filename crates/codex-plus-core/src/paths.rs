@@ -6,6 +6,7 @@ const SETTINGS_FILE: &str = "settings.json";
 const LATEST_STATUS_FILE: &str = "latest-status.json";
 const DIAGNOSTIC_LOG_FILE: &str = "codex-plus.log";
 const PENDING_PROVIDER_IMPORT_FILE: &str = "pending-provider-import.json";
+const UPDATE_PREFERENCES_FILE: &str = "update-preferences.json";
 
 pub fn default_app_state_dir() -> PathBuf {
     if let Some(home_dir) = directories::BaseDirs::new().map(|dirs| dirs.home_dir().to_path_buf()) {
@@ -32,6 +33,10 @@ pub fn default_diagnostic_log_path() -> PathBuf {
 
 pub fn default_pending_provider_import_path() -> PathBuf {
     default_app_state_dir().join(PENDING_PROVIDER_IMPORT_FILE)
+}
+
+pub fn default_update_preferences_path() -> PathBuf {
+    default_app_state_dir().join(UPDATE_PREFERENCES_FILE)
 }
 
 fn settings_path_for_tests() -> Option<PathBuf> {
@@ -82,5 +87,12 @@ mod tests {
         let path = default_pending_provider_import_path();
 
         assert!(path.ends_with(".codex-session-delete/pending-provider-import.json"));
+    }
+
+    #[test]
+    fn default_update_preferences_path_uses_app_state_directory() {
+        let path = default_update_preferences_path();
+
+        assert!(path.ends_with(".codex-session-delete/update-preferences.json"));
     }
 }

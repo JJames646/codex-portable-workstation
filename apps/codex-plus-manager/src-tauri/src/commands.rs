@@ -12,7 +12,7 @@ use codex_plus_core::settings::{BackendSettings, RelayProfile, SettingsStore};
 use codex_plus_core::status::{LaunchStatus, StatusStore};
 use codex_plus_core::user_scripts::UserScriptManager;
 use codex_plus_core::zed_remote::{ZedOpenStrategy, ZedRemoteProject};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
 use crate::install::{self, InstallActionResult, InstallOptions};
@@ -365,6 +365,12 @@ pub struct ScriptMarketPayload {
 #[serde(rename_all = "camelCase")]
 pub struct StartupPayload {
     pub show_update: bool,
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdatePreferencesPayload {
+    pub ignored_version: String,
 }
 
 #[tauri::command]
@@ -1651,6 +1657,65 @@ fn count_skill_files(root: &Path) -> std::io::Result<usize> {
         }
     }
     Ok(total)
+}
+
+fn read_update_preferences() -> anyhow::Result<UpdatePreferencesPayload> {
+    let path = codex_plus_core::paths::default_update_preferences_path();
+    let contents = match fs::read_to_string(&path) {
+        Ok(contents) => contents,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
+            return Ok(UpdatePreferencesPayload::default());
+        }
+        Err(error) => return Err(error.into()),
+    };
+    Ok(serde_json::from_str(&contents).unwrap_or_default())
+}
+
+fn write_update_preferences(preferences: &UpdatePreferencesPayload) -> anyhow::Result<()> {
+    let path = codex_plus_core::paths::default_update_preferences_path();
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent)?;
+    }
+    let contents = serde_json::to_vec_pretty(preferences)?;
+    codex_plus_core::settings::atomic_write(&path, &contents)?;
+    Ok(())
+}
+
+#[tauri::command]
+pub fn load_update_preferences() -> CommandResult<UpdatePreferencesPayload> {
+    match read_update_preferences() {
+        Ok(preferences) => ok("更新提醒设置已加载。", preferences),
+        Err(error) => failed(
+            &format!("读取更新提醒设置失败：{error}"),
+            UpdatePreferencesPayload::default(),
+        ),
+    }
+}
+
+#[tauri::command]
+pub fn set_ignored_update_version(version: String) -> CommandResult<UpdatePreferencesPayload> {
+    let ignored_version = version.trim();
+    if !is_valid_update_version(ignored_version) {
+        return failed("更新版本号格式无效。", UpdatePreferencesPayload::default());
+    }
+
+    let preferences = UpdatePreferencesPayload {
+        ignored_version: ignored_version.to_string(),
+    };
+    match write_update_preferences(&preferences) {
+        Ok(()) => ok("更新提醒设置已保存。", preferences),
+        Err(error) => failed(
+            &format!("保存更新提醒设置失败：{error}"),
+            UpdatePreferencesPayload::default(),
+        ),
+    }
+}
+
+fn is_valid_update_version(version: &str) -> bool {
+    version.len() <= 128
+        && version
+            .chars()
+            .all(|character| character.is_ascii_alphanumeric() || ".-_+".contains(character))
 }
 
 #[tauri::command]
@@ -4160,5 +4225,13 @@ model_reasoning_effort = "high"
 
         assert_eq!(result.status, "failed");
         assert!(result.message.contains("只允许打开 http 或 https 链接"));
+    }
+
+    #[test]
+    fn ignored_update_version_validation_accepts_release_tags_only() {
+        assert!(is_valid_update_version(""));
+        assert!(is_valid_update_version("v1.2.37-beta+2"));
+        assert!(!is_valid_update_version("../v1.2.37"));
+        assert!(!is_valid_update_version("v1.2.37 latest"));
     }
 }

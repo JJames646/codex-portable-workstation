@@ -17,13 +17,20 @@ type UpdateSnapshot = {
 
 export function UpdatesScreen({
   update,
+  ignoredVersion,
   onCheck,
   onOpenLegacyDetails,
+  onRestoreReminder,
 }: {
   update: UpdateSnapshot;
+  ignoredVersion: string;
   onCheck: () => void;
   onOpenLegacyDetails: () => void;
+  onRestoreReminder: () => void;
 }) {
+  const currentVersionIgnored =
+    Boolean(ignoredVersion) && update?.latestVersion === ignoredVersion;
+
   return (
     <div className="workstation-page">
       <SectionCard
@@ -68,6 +75,14 @@ export function UpdatesScreen({
             title={t("Codex++ 上游更新参考")}
             tone={update?.updateAvailable ? "warning" : update ? "ok" : "neutral"}
           />
+          {currentVersionIgnored ? (
+            <EnvironmentRow
+              detail={t("该版本不会在启动时再次弹出提醒，手动检查仍然可用")}
+              status={t("已忽略")}
+              title={ignoredVersion}
+              tone="neutral"
+            />
+          ) : null}
           <EnvironmentRow
             detail={t("当前阶段不下载、不替换工作站组件")}
             status={t("禁用")}
@@ -87,6 +102,16 @@ export function UpdatesScreen({
           </div>
           <CircleArrowUp className="h-5 w-5" />
         </div>
+        {currentVersionIgnored ? (
+          <Button
+            className="workstation-restore-update"
+            onClick={onRestoreReminder}
+            size="sm"
+            variant="outline"
+          >
+            {t("恢复此版本提醒")}
+          </Button>
+        ) : null}
       </SectionCard>
     </div>
   );

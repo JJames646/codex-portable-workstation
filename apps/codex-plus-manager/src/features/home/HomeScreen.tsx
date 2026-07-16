@@ -16,7 +16,6 @@ import {
   MetricCard,
   SectionCard,
   ServiceAdapterRow,
-  SnapshotStatus,
   StatusPill,
   type WorkstationNavigationTarget,
 } from "@/features/workstation/components";
@@ -24,22 +23,22 @@ import {
 export function HomeScreen({
   snapshot,
   loading,
-  onRefresh,
   onNavigate,
 }: {
   snapshot: WorkstationSnapshot;
   loading: boolean;
-  onRefresh: () => void;
   onNavigate: (route: WorkstationNavigationTarget) => void;
 }) {
   const launch = snapshot.overview?.latest_launch;
   const codexRunning = launch?.status === "running";
   const activeProvider = activeProviderName(snapshot);
   const workspace = snapshot.sessions.find((session) => session.cwd.trim())?.cwd;
-  const contextTotal =
-    snapshot.contextCounts.mcpServers +
-    snapshot.contextCounts.skills +
-    snapshot.contextCounts.plugins;
+  const projectCount = new Set(
+    snapshot.sessions
+      .map((session) => session.cwd.trim())
+      .filter(Boolean),
+  ).size;
+  const activityBars = buildActivityBars(snapshot);
   const relayEnvironmentHealthy =
     snapshot.relayEnvironment !== null &&
     !snapshot.relayEnvironment.clashVergeTun.enabled &&
@@ -62,7 +61,7 @@ export function HomeScreen({
         />
         <MetricCard
           detail={snapshot.services.control.message}
-          label={t("工作站服务")}
+          label={t("网络环境")}
           value={t("未接入")}
         />
       </section>
@@ -78,57 +77,75 @@ export function HomeScreen({
           detail={t("数据直接来自 Codex++ 本地 Overview、设置、会话和扩展接口")}
           title={t("Codex++ 概览仪表盘")}
         >
-          <SnapshotStatus
-            loading={loading}
-            onRefresh={onRefresh}
-            status={snapshot.status}
-          />
-          <div className="workstation-dashboard-head">
-            <div>
-              <span className="workstation-dashboard-icon">
-                <Gauge className="h-5 w-5" />
-              </span>
+          <div className="workstation-dashboard-frame">
+            <div className="workstation-dashboard-head">
               <div>
-                <strong>{t("本地工作站状态")}</strong>
-                <small>{t("不需要登录工作站账号")}</small>
+                <span className="workstation-dashboard-icon">
+                  <Gauge className="h-5 w-5" />
+                </span>
+                <div>
+                  <strong>{t("Codex++ 能力与工作站状态")}</strong>
+                  <small>{t("无需登录账号，直接读取当前 Codex++ 本地数据。")}</small>
+                </div>
+              </div>
+              <StatusPill tone={snapshot.status === "ok" ? "ok" : "warning"}>
+                {loading
+                  ? t("检测中")
+                  : snapshot.status === "ok"
+                    ? t("本地数据正常")
+                    : t("部分数据不可用")}
+              </StatusPill>
+            </div>
+            <div className="workstation-dashboard-metrics">
+              <DashboardMetric
+                icon={<Box className="h-4 w-4" />}
+                label={t("Codex 版本")}
+                value={snapshot.overview?.codex_version || t("未检测到")}
+              />
+              <DashboardMetric
+                icon={<FolderKanban className="h-4 w-4" />}
+                label={t("项目与会话")}
+                value={`${projectCount} / ${snapshot.sessions.length}`}
+              />
+              <DashboardMetric
+                icon={<KeyRound className="h-4 w-4" />}
+                label={t("供应商")}
+                value={activeProvider}
+              />
+            </div>
+            <div className="workstation-usage-strip">
+              <div>
+                <PlugZap className="h-4 w-4" />
+                <span>{t("插件")}</span>
+                <strong>{snapshot.contextCounts.plugins}</strong>
+              </div>
+              <div>
+                <Boxes className="h-4 w-4" />
+                <span>{t("Skills")}</span>
+                <strong>{snapshot.contextCounts.skills}</strong>
+              </div>
+              <div>
+                <FolderKanban className="h-4 w-4" />
+                <span>{t("会话索引")}</span>
+                <strong>{snapshot.sessions.length ? t("正常") : t("暂无")}</strong>
+              </div>
+              <div>
+                <FolderKanban className="h-4 w-4" />
+                <span>{t("远程项目")}</span>
+                <strong>{snapshot.zedProjectCount}</strong>
               </div>
             </div>
-            <StatusPill tone={snapshot.status === "ok" ? "ok" : "warning"}>
-              {snapshot.status === "ok" ? t("本地数据正常") : t("部分数据不可用")}
-            </StatusPill>
-          </div>
-          <div className="workstation-dashboard-metrics">
-            <DashboardMetric
-              icon={<Box className="h-4 w-4" />}
-              label={t("Codex 版本")}
-              value={snapshot.overview?.codex_version || t("未检测到")}
-            />
-            <DashboardMetric
-              icon={<FolderKanban className="h-4 w-4" />}
-              label={t("会话")}
-              value={String(snapshot.sessions.length)}
-            />
-            <DashboardMetric
-              icon={<KeyRound className="h-4 w-4" />}
-              label={t("供应商")}
-              value={activeProvider}
-            />
-          </div>
-          <div className="workstation-usage-strip">
-            <div>
-              <PlugZap className="h-4 w-4" />
-              <span>{t("扩展")}</span>
-              <strong>{contextTotal}</strong>
-            </div>
-            <div>
-              <Boxes className="h-4 w-4" />
-              <span>{t("Skills")}</span>
-              <strong>{snapshot.contextCounts.skills}</strong>
-            </div>
-            <div>
-              <FolderKanban className="h-4 w-4" />
-              <span>{t("远程项目")}</span>
-              <strong>{snapshot.zedProjectCount}</strong>
+            <div
+              aria-label={t("最近十二天会话活动")}
+              className="workstation-activity-chart"
+            >
+              {activityBars.map((bar) => (
+                <i
+                  key={bar.label}
+                  style={{ height: `${bar.height}%` }}
+                  title={`${bar.label} · ${bar.count}`}
+                />
+              ))}
             </div>
           </div>
           <div className="workstation-service-list">
@@ -140,11 +157,6 @@ export function HomeScreen({
         </SectionCard>
 
         <SectionCard
-          action={
-            <Button onClick={() => onNavigate("network")} size="sm" variant="outline">
-              {t("环境配置")}
-            </Button>
-          }
           detail={t("只有未配置或异常的项目可以点击进入对应页面")}
           title={t("运行状态与环境校验")}
         >
@@ -203,10 +215,44 @@ export function HomeScreen({
               ))}
             </div>
           ) : null}
+          <Button
+            className="workstation-primary-wide"
+            onClick={() => onNavigate("network")}
+          >
+            {t("开始环境配置")}
+          </Button>
         </SectionCard>
       </section>
     </div>
   );
+}
+
+function buildActivityBars(snapshot: WorkstationSnapshot) {
+  const dayMs = 24 * 60 * 60 * 1000;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const counts = Array.from({ length: 12 }, () => 0);
+
+  for (const session of snapshot.sessions) {
+    if (!session.updatedAtMs) continue;
+    const age = Math.floor(
+      (today.getTime() - new Date(session.updatedAtMs).setHours(0, 0, 0, 0)) /
+        dayMs,
+    );
+    if (age >= 0 && age < counts.length) {
+      counts[counts.length - 1 - age] += 1;
+    }
+  }
+
+  const max = Math.max(...counts, 1);
+  return counts.map((count, index) => {
+    const day = new Date(today.getTime() - (counts.length - 1 - index) * dayMs);
+    return {
+      count,
+      height: count ? Math.max(18, Math.round((count / max) * 100)) : 8,
+      label: day.toLocaleDateString("zh-CN"),
+    };
+  });
 }
 
 function DashboardMetric({

@@ -76,6 +76,7 @@ import {
   type ModelWindowRow,
 } from "./model-windows";
 import { resolveProviderSyncCompletion } from "./provider-sync-flow";
+import { shouldPromptForUpdate } from "./update-policy";
 import { getLanguage, t, tf, toggleLanguage } from "@/i18n";
 import { ConnectionScreen } from "@/features/connection/ConnectionScreen";
 import { DataScreen } from "@/features/data/DataScreen";
@@ -605,6 +606,10 @@ type UpdateResult = CommandResult<{
   progress?: number;
 }>;
 
+type UpdatePreferencesResult = CommandResult<{
+  ignoredVersion: string;
+}>;
+
 type AdItem = {
   id?: string;
   type: "sponsor" | "normal" | string;
@@ -855,6 +860,9 @@ export function App() {
   const [diagnostics, setDiagnostics] = useState<DiagnosticsResult | null>(null);
   const [watcher, setWatcher] = useState<WatcherResult | null>(null);
   const [update, setUpdate] = useState<UpdateResult | null>(null);
+  const [ignoredUpdateVersion, setIgnoredUpdateVersion] = useState("");
+  const [updatePrompt, setUpdatePrompt] = useState<UpdateResult | null>(null);
+  const promptedUpdateVersions = useRef(new Set<string>());
   const [updateInstallProgress, setUpdateInstallProgress] = useState<TaskProgress>({
     active: false,
     percent: 0,
@@ -1317,7 +1325,7 @@ export function App() {
     if (next === "maintenance") {
       await Promise.all([refreshOverview(true), refreshWatcher(true)]);
     }
-    if (next === "updates") await checkUpdate(true);
+    if (next === "updates") await checkUpdate();
   };
 
   const launch = async () => {
@@ -1485,18 +1493,54 @@ export function App() {
     }
   };
 
-  const checkUpdate = async (silent = false) => {
+  const checkUpdate = async (
+    options: {
+      notify?: boolean;
+      prompt?: boolean;
+      ignoredVersion?: string;
+    } = {},
+  ) => {
     const result = await run(() => call<UpdateResult>("check_update"));
     if (result) {
       setUpdate(result);
-      if (!silent || result.updateAvailable) {
+      const ignoredVersion =
+        options.ignoredVersion ?? ignoredUpdateVersion;
+      if (
+        options.prompt &&
+        shouldPromptForUpdate(
+          result,
+          ignoredVersion,
+          promptedUpdateVersions.current,
+        )
+      ) {
+        const latestVersion = result.latestVersion?.trim() ?? "";
+        promptedUpdateVersions.current.add(latestVersion);
+        setUpdatePrompt(result);
+      } else if (options.notify) {
         showNotice(t("GitHub Release 检查"), result.message, result.status);
       }
     }
+    return result;
+  };
+
+  const saveIgnoredUpdateVersion = async (version: string) => {
+    const result = await run(() =>
+      call<UpdatePreferencesResult>("set_ignored_update_version", {
+        version,
+      }),
+    );
+    if (!result) return;
+    if (isSuccessStatus(result.status)) {
+      setIgnoredUpdateVersion(result.ignoredVersion);
+      setUpdatePrompt(null);
+      return;
+    }
+    showNotice(t("更新提醒设置"), result.message, result.status);
   };
 
   const performUpdate = async () => {
     if (updateInstallProgress.active) return;
+    setUpdatePrompt(null);
     const release =
       update?.latestVersion && update.assetName && update.assetUrl
         ? {
@@ -2016,6 +2060,9 @@ export function App() {
   useEffect(() => {
     void (async () => {
       const startupPromise = run(() => call<StartupResult>("startup_options"));
+      const updatePreferencesPromise = run(() =>
+        call<UpdatePreferencesResult>("load_update_preferences"),
+      );
       const initialRefresh = Promise.all([
         refreshOverview(true),
         refreshSettings(true),
@@ -2027,12 +2074,13 @@ export function App() {
         refreshWorkstationSnapshot(true),
       ]);
       const startup = await startupPromise;
+      const updatePreferences = await updatePreferencesPromise;
+      const ignoredVersion = updatePreferences?.ignoredVersion ?? "";
+      setIgnoredUpdateVersion(ignoredVersion);
       if (startup?.showUpdate) {
         setRoute("updates");
-        void checkUpdate(false);
-      } else {
-        void checkUpdate(true);
       }
+      void checkUpdate({ prompt: true, ignoredVersion });
       await initialRefresh;
     })();
   }, []);
@@ -2084,7 +2132,9 @@ export function App() {
       installEntrypoints,
       uninstallEntrypoints,
       repairShortcuts,
-      checkUpdate,
+      checkUpdate: async () => {
+        await checkUpdate({ notify: true });
+      },
       performUpdate,
       saveSettings,
       saveSettingsValue,
@@ -2225,9 +2275,11 @@ export function App() {
       disableWatcher: () => watcherAction("disable_watcher"),
       toggleTheme: () => setTheme((current) => (current === "dark" ? "light" : "dark")),
     }),
-    [route, launchForm, settingsForm, settings, removeOwnedData, update, updateInstallProgress.active, logs, diagnostics, theme, relayFiles, localSessions, zedRemoteProjects, selectedProviderSyncTarget, envConflicts, relayEnvironment, ccsProviders],
+    [route, launchForm, settingsForm, settings, removeOwnedData, update, updateInstallProgress.active, ignoredUpdateVersion, logs, diagnostics, theme, relayFiles, localSessions, zedRemoteProjects, selectedProviderSyncTarget, envConflicts, relayEnvironment, ccsProviders],
   );
-  const hasUpdate = update?.updateAvailable === true;
+  const hasUpdate =
+    update?.updateAvailable === true &&
+    update.latestVersion !== ignoredUpdateVersion;
 
   return (
     <div className={`shell ${theme}`}>
@@ -2248,7 +2300,6 @@ export function App() {
                   className="update-dot"
                   onClick={() => {
                     setRoute("updates");
-                    void checkUpdate(false);
                   }}
                   title={tf("发现新版本 {0}", [update?.latestVersion ?? ""])}
                   type="button"
@@ -2290,8 +2341,9 @@ export function App() {
       <main className="workspace">
         <header className="topbar" key={`topbar-${route}`}>
           <div>
+            <p className="crumb">Codex Portable Workstation</p>
             <h1>{routeTitle(route)}</h1>
-            <p>{routeSubtitle(route)}</p>
+            <p className="sr-only">{routeSubtitle(route)}</p>
           </div>
           <div className="topbar-actions">
             <Button
@@ -2338,7 +2390,6 @@ export function App() {
             <HomeScreen
               loading={workstationLoading}
               onNavigate={(next) => void navigate(next as Route)}
-              onRefresh={() => void refreshWorkstationSnapshot(false)}
               snapshot={workstationSnapshot}
             />
           ) : null}
@@ -2408,8 +2459,10 @@ export function App() {
           ) : null}
           {route === "updates" ? (
             <UpdatesScreen
-              onCheck={() => void checkUpdate(false)}
+              ignoredVersion={ignoredUpdateVersion}
+              onCheck={() => void checkUpdate({ notify: true })}
               onOpenLegacyDetails={() => void navigate("about")}
+              onRestoreReminder={() => void saveIgnoredUpdateVersion("")}
               update={update}
             />
           ) : null}
@@ -2450,6 +2503,21 @@ export function App() {
           key={`${notice.title}-${notice.message}-${notice.status ?? ""}`}
           notice={notice}
           onClose={() => setNotice(null)}
+        />
+      ) : null}
+      {updatePrompt ? (
+        <UpdatePromptDialog
+          onIgnore={() =>
+            void saveIgnoredUpdateVersion(
+              updatePrompt.latestVersion?.trim() ?? "",
+            )
+          }
+          onLater={() => setUpdatePrompt(null)}
+          onViewUpdate={() => {
+            setUpdatePrompt(null);
+            setRoute("updates");
+          }}
+          update={updatePrompt}
         />
       ) : null}
       {confirmDialog ? (
@@ -5428,6 +5496,55 @@ function GuideList({ items }: { items: string[] }) {
           <p>{item}</p>
         </div>
       ))}
+    </div>
+  );
+}
+
+function UpdatePromptDialog({
+  update,
+  onViewUpdate,
+  onLater,
+  onIgnore,
+}: {
+  update: UpdateResult;
+  onViewUpdate: () => void;
+  onLater: () => void;
+  onIgnore: () => void;
+}) {
+  return (
+    <div className="modal-backdrop update-prompt-backdrop">
+      <section
+        aria-labelledby="update-prompt-title"
+        aria-modal="true"
+        className="modal-card update-prompt-card"
+        role="dialog"
+      >
+        <div className="update-prompt-icon">
+          <CircleArrowUp className="h-6 w-6" />
+        </div>
+        <div>
+          <p className="eyebrow">{t("发现可用更新")}</p>
+          <h2 id="update-prompt-title">
+            {tf("Codex++ {0}", [update.latestVersion ?? t("新版本")])}
+          </h2>
+          <p className="update-prompt-copy">
+            {update.releaseSummary?.trim() ||
+              t("新版本已经可以使用。您可以现在查看更新、下次完整启动时再提醒，或忽略当前版本。")}
+          </p>
+        </div>
+        <div className="update-prompt-actions">
+          <Button onClick={onViewUpdate}>
+            <CircleArrowUp className="h-4 w-4" />
+            {t("前往更新")}
+          </Button>
+          <Button onClick={onLater} variant="outline">
+            {t("稍后提醒")}
+          </Button>
+          <Button onClick={onIgnore} variant="ghost">
+            {t("忽略此版本")}
+          </Button>
+        </div>
+      </section>
     </div>
   );
 }

@@ -51,7 +51,7 @@ fn manager_main_window_uses_default_window_icon_explicitly() {
 }
 
 #[test]
-fn manager_close_minimizes_to_tray_without_confirmation() {
+fn manager_close_exits_instead_of_hiding_to_tray() {
     let lib_rs = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/src/lib.rs"))
         .expect("read manager lib.rs");
     let manifest_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
@@ -61,7 +61,9 @@ fn manager_close_minimizes_to_tray_without_confirmation() {
     assert!(!lib_rs.contains("MessageDialogButtons"));
     assert!(!lib_rs.contains(".dialog()"));
     assert!(!lib_rs.contains("manager://close-requested"));
-    assert!(lib_rs.contains("let _ = close_event_window.hide();"));
+    assert!(!lib_rs.contains("let _ = close_event_window.hide();"));
+    assert!(!lib_rs.contains("minimized_window.hide()"));
+    assert!(lib_rs.contains("app_handle.exit(0);"));
     assert!(!app_tsx.contains("CloseConfirmDialog"));
     assert!(app_tsx.contains("manager_exit_app"));
     assert!(app_tsx.contains("manager_hide_to_tray"));
@@ -118,6 +120,8 @@ fn windows_binaries_request_administrator_privileges() {
     assert!(launcher_build.contains("windows-app-manifest.xml"));
     assert!(windows_manifest.contains("requireAdministrator"));
     assert!(windows_manifest.contains("Microsoft.Windows.Common-Controls"));
+    assert!(windows_manifest.contains("PerMonitorV2"));
+    assert!(windows_manifest.contains("true/pm"));
     assert!(windows_installer.contains("RequestExecutionLevel admin"));
 }
 

@@ -15,6 +15,21 @@
 
 当前客户端仍不是 U 盘便携运行时。便携根目录、受控停止、安全弹出和真实服务器连接分别属于后续阶段。
 
+### 1.1 阶段 B.1 修正
+
+根据 Windows 首轮体验反馈，阶段 B.1 完成以下修正：
+
+- 不再重新估算工作站视觉样式，直接以
+  `prototype/workstation-launcher-ui/styles.css` 为视觉数据源。
+- 将原型样式作为最终 CSS 覆盖层加载，避免被 Codex++ 原有全局样式覆盖。
+- 首页卡片尺寸、侧栏、顶栏、字体层级、深浅色主题、仪表盘和红色渐变停止按钮与确认过的网页原型保持一致。
+- 原型中的演示数字没有进入正式客户端，页面继续显示 Codex++ 真实本地数据。
+- 更新提醒每次完整启动最多弹出一次；进入更新中心不会重复弹窗。
+- 新增“稍后提醒”“忽略此版本”和“恢复此版本提醒”。
+- Windows 右上角关闭按钮改为退出管理器，不再隐藏到托盘。
+- Windows Manifest 增加 `PerMonitorV2` DPI 声明，改善 WebView2 在 Windows 缩放环境下的文字清晰度。
+- 中英文切换功能保持不变。
+
 ## 2. 主要实现
 
 ### 2.1 工作站外壳
@@ -106,14 +121,21 @@ apps/codex-plus-manager/src/features/connection/ConnectionScreen.tsx
 apps/codex-plus-manager/src/features/updates/UpdatesScreen.tsx
 apps/codex-plus-manager/src/features/workstation/components.tsx
 apps/codex-plus-manager/src/features/workstation/workstation.css
+apps/codex-plus-manager/src/features/workstation/prototype-fidelity.css
 apps/codex-plus-manager/src/lib/workstation-api.ts
 apps/codex-plus-manager/src/workstation-api.test.ts
+apps/codex-plus-manager/src/update-policy.ts
+apps/codex-plus-manager/src/update-policy.test.ts
 apps/codex-plus-manager/src/App.tsx
+apps/codex-plus-manager/src/main.tsx
 apps/codex-plus-manager/src/styles.css
 apps/codex-plus-manager/index.html
+apps/codex-plus-manager/src-tauri/src/commands.rs
 apps/codex-plus-manager/src-tauri/src/lib.rs
+apps/codex-plus-manager/src-tauri/windows-app-manifest.xml
 apps/codex-plus-manager/src-tauri/tauri.conf.json
 apps/codex-plus-manager/src-tauri/tests/windows_subsystem.rs
+crates/codex-plus-core/src/paths.rs
 ```
 
 ## 4. 验证结果
@@ -122,11 +144,13 @@ apps/codex-plus-manager/src-tauri/tests/windows_subsystem.rs
 
 ```text
 npm run check        通过
-npm test             通过，18 项测试
+npm test             通过，22 项测试
 npm run vite:build   通过
 ```
 
-使用本地浏览器自动化验证了 12 个主导航页面、深色主题、浅色主题和 `960 × 720` 窄窗口布局。页面无控制台错误。
+阶段 B.1 重新以 `1280 × 860` 截取已确认原型和 React 工作站首页进行逐项对照。
+最终页面的侧栏宽度、顶栏高度、三张状态卡、仪表盘布局、环境校验列表和字体层级已对齐，
+页面无控制台错误。
 
 ### 4.2 Windows 11 x64
 
@@ -134,7 +158,7 @@ npm run vite:build   通过
 
 ```text
 npm run check                       通过
-npm test                            通过，18 项测试
+npm test                            通过，22 项测试
 cargo fmt --all -- --check          通过
 cargo test --workspace --offline    通过
 npm run build                       通过
@@ -152,11 +176,18 @@ NO_PROXY=127.0.0.1,localhost
 
 ```text
 路径：D:\Dev\codex-portable\target\release\codex-plus-plus-manager.exe
-大小：26,497,536 bytes
-SHA-256：2E6B0717B77D7828BA0ADFB8A908F73D7AE682C57420DD58308D04F99B270266
+大小：26,584,064 bytes
+SHA-256：B3CCC68D255E48C199215F01B093283169CAA01BF97A5EC8EF5307752B55B400
 ```
 
 该哈希只对应本次本地阶段 B 构建，不是正式发布签名。
+
+构建时原 `target\release\codex-plus-plus.exe` 正被现有 Codex 启动链使用，因此没有强制停止该进程。
+新版管理器先在独立目标目录构建，再单独替换管理器 EXE。旧管理器备份为：
+
+```text
+D:\Dev\codex-portable\target\release\codex-plus-plus-manager.phase-b-ui.bak.exe
+```
 
 ## 5. 已知事项
 
@@ -165,6 +196,7 @@ SHA-256：2E6B0717B77D7828BA0ADFB8A908F73D7AE682C57420DD58308D04F99B270266
 3. 阶段 B 没有实现 `CODEXPP_HOME`、移动盘根目录或数据迁移。
 4. 阶段 B 没有实现受控停止、安全弹出、签名更新或服务器连接。
 5. Windows EXE 已完成原生编译，但为保护用户现有 Codex 数据，没有在未隔离状态下远程启动。
+   右上角关闭和 DPI 效果需要用户在交互式 Windows 桌面手动打开新版 EXE 做最终目视确认。
 
 ## 6. 下一阶段
 

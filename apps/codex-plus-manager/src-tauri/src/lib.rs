@@ -1,15 +1,12 @@
 pub mod commands;
 pub mod install;
 
-use std::sync::atomic::{AtomicBool, Ordering};
-
 use tauri::menu::{Menu, MenuItem};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 use tauri::{Manager, WindowEvent};
 
 const TRAY_ID: &str = "codex_plus_tray";
 
-static APP_EXITING: AtomicBool = AtomicBool::new(false);
 const TRAY_MENU_SHOW: &str = "tray_show_main";
 const TRAY_MENU_QUIT: &str = "tray_quit_app";
 
@@ -82,6 +79,8 @@ pub fn run() {
             commands::remote_plugin_marketplace_status,
             commands::repair_remote_plugin_marketplace,
             commands::check_update,
+            commands::load_update_preferences,
+            commands::set_ignored_update_version,
             commands::perform_update,
             commands::load_watcher_state,
             commands::install_watcher,
@@ -142,7 +141,6 @@ fn install_tray<R: tauri::Runtime>(app: &tauri::App<R>) -> tauri::Result<()> {
                 show_main_window(app);
             }
             TRAY_MENU_QUIT => {
-                APP_EXITING.store(true, Ordering::SeqCst);
                 app.exit(0);
             }
             _ => {}
@@ -171,23 +169,11 @@ fn install_tray<R: tauri::Runtime>(app: &tauri::App<R>) -> tauri::Result<()> {
 }
 
 fn register_main_window_events<R: tauri::Runtime>(window: tauri::WebviewWindow<R>) {
-    let event_window = window.clone();
-    let minimized_window = event_window.clone();
-    let close_event_window = event_window.clone();
-
-    event_window.on_window_event(move |event| match event {
-        WindowEvent::Resized(_) => {
-            if matches!(minimized_window.is_minimized(), Ok(true)) {
-                let _ = minimized_window.hide();
-            }
-        }
+    let app_handle = window.app_handle().clone();
+    window.on_window_event(move |event| match event {
         WindowEvent::CloseRequested { api, .. } => {
-            if APP_EXITING.load(Ordering::SeqCst) {
-                return;
-            }
-
             api.prevent_close();
-            let _ = close_event_window.hide();
+            app_handle.exit(0);
         }
         _ => {}
     });
@@ -195,7 +181,6 @@ fn register_main_window_events<R: tauri::Runtime>(window: tauri::WebviewWindow<R
 
 #[tauri::command]
 fn manager_exit_app<R: tauri::Runtime>(app: tauri::AppHandle<R>) {
-    APP_EXITING.store(true, Ordering::SeqCst);
     app.exit(0);
 }
 
