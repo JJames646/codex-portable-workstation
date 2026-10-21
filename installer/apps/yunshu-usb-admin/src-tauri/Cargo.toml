@@ -1,0 +1,31 @@
+[package]
+name = "yunshu-usb-admin"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lib]
+name = "yunshu_usb_admin_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[[bin]]
+name = "云枢AI管理员U盘生产工具"
+path = "src/main.rs"
+
+[build-dependencies]
+tauri-build.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+chrono.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tauri.workspace = true
+tauri-plugin-dialog.workspace = true
+uuid.workspace = true
+yunshu-usb-writer-core = { path = "../../../crates/yunshu-usb-writer-core" }
+
+[features]
+default = []
+custom-protocol = ["tauri/custom-protocol"]

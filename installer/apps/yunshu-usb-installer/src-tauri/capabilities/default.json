@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "用户U盘安装器主窗口权限",
+  "windows": ["main"],
+  "permissions": ["core:default"]
+}

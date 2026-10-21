@@ -1,0 +1,4 @@
+8e31020a859741036cd708b65d1e21e5f0000eecfbdcbf199d57401ad021a602  Yunshu-AI-Workstation-1.2.1-Windows-x64.zip
+bfb887968b4033a71599cf168d465769f904262abb63f6e28277575b241741a4  Yunshu-AI-Workstation-1.2.1-Source.zip
+d9160f5047c8f1e18bc86dfba1a5a694d4dc2331c834e3894f0a2dd756045a8b  Yunshu-AI-Workstation-Demo.mp4
+52702d5eb83afdbb2ebfa796c91be39a679725395a42ec4dfceea5663af0d254  release-verification.json

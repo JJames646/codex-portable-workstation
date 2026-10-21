@@ -1,0 +1,48 @@
+[package]
+name = "yunshu-three-engine-workstation"
+version = "0.1.0"
+description = "云枢AI便携工作站"
+authors = ["云枢工作室"]
+edition = "2024"
+license = "Proprietary"
+publish = false
+
+[lib]
+name = "yunshu_three_engine_workstation"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[[bin]]
+name = "yunshu-three-engine-workstation"
+path = "src/main.rs"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+anyhow = "1.0"
+base64 = "0.22"
+chrono = { version = "0.4", default-features = false, features = ["clock", "serde"] }
+ed25519-dalek = "2.2"
+getrandom = "0.3"
+image = { version = "0.25", default-features = false, features = ["jpeg", "png", "webp"] }
+reqwest = { version = "0.12", default-features = false, features = ["json", "multipart", "rustls-tls", "stream"] }
+rusqlite = { version = "0.32", features = ["bundled"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+sha2 = "0.10"
+tauri = { version = "2", features = [] }
+tauri-plugin-dialog = "2"
+tokio = { version = "1.47", features = ["rt-multi-thread", "sync", "time"] }
+url = "2.5"
+uuid = { version = "1", features = ["v4"] }
+zeroize = "1.8"
+yunshu-workstation-runtime = { path = "../../backend-src" }
+
+[dev-dependencies]
+tempfile = "3.20"
+
+[workspace]
+
+[features]
+default = []
+custom-protocol = ["tauri/custom-protocol"]

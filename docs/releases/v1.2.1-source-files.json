@@ -1,0 +1,558 @@
+{
+  "productVersion": "1.2.1",
+  "buildId": "9303dc9771b80694",
+  "origin": "Signed installer payload source/release-9303dc9771b80694/",
+  "originalFiles": [
+    {
+      "path": "SOURCE_PROVENANCE.json",
+      "bytes": 579,
+      "sha256": "f3bca283e518a16e5b3a357532cfc023812f38bf2cade642eb210a4c0c77369a"
+    },
+    {
+      "path": "backend-src/.gitignore",
+      "bytes": 10,
+      "sha256": "32612892f1c9e15fe772b8034945f8072b83e025153aef597e45d5eccbe98c43"
+    },
+    {
+      "path": "backend-src/Cargo.lock",
+      "bytes": 54490,
+      "sha256": "687680984780888601f0ee7d91e0fef0f164b7c2562c6bedac35ecd8cc96812f"
+    },
+    {
+      "path": "backend-src/Cargo.toml",
+      "bytes": 1196,
+      "sha256": "c32c5e74e46d2ad1e277dfed712caa2ebe0a1f49ce6a951e185a82dde919209c"
+    },
+    {
+      "path": "backend-src/build.rs",
+      "bytes": 1414,
+      "sha256": "98fb7cb6eae7fcb3f54680496262ef4c55ec561cf2095a6c6b7bcb46a4ba4c9a"
+    },
+    {
+      "path": "backend-src/src/bridge.rs",
+      "bytes": 51017,
+      "sha256": "e27ef291dcd687867f3c99172565ee068a1d77429c1863bd8ae7543ea2a7c989"
+    },
+    {
+      "path": "backend-src/src/codex_machine.rs",
+      "bytes": 42064,
+      "sha256": "43c1a1f2077fe18957d828da862f3810448f6180d8e5a1dfae405ad1467b6541"
+    },
+    {
+      "path": "backend-src/src/codex_proxy.rs",
+      "bytes": 40337,
+      "sha256": "c87ad49c6a1c3fcefcc092709c9efe90794819b6a08c6474baa7910f17ef18f5"
+    },
+    {
+      "path": "backend-src/src/config.rs",
+      "bytes": 22298,
+      "sha256": "eec3cbc8631542e0a0ccb20c96caeb4ec3f6a29eeb0554e80f10cc73318ec7fe"
+    },
+    {
+      "path": "backend-src/src/engine.rs",
+      "bytes": 14287,
+      "sha256": "f7713c538714113426fd08769b8d2b80795e388cd359375b871ab04cc9786cd3"
+    },
+    {
+      "path": "backend-src/src/lib.rs",
+      "bytes": 443,
+      "sha256": "d3e52b5de6ca73fd6a1683f2b60ccba587fb5e03f537af0f52b7db0ebd528e6b"
+    },
+    {
+      "path": "backend-src/src/locale.rs",
+      "bytes": 8730,
+      "sha256": "376aafc4fa24ef87598c8a93fd4f92b00e419a916c7dbf91c0a90126b212e3a4"
+    },
+    {
+      "path": "backend-src/src/locale_init.rs",
+      "bytes": 58557,
+      "sha256": "b16189b19ce135aee5c31d8cf4d1a8f2996e1b009d52db3bf2068cbe636f793d"
+    },
+    {
+      "path": "backend-src/src/main.rs",
+      "bytes": 19520,
+      "sha256": "75e203c926e32a176c760313810fb4216fa7a2834399d219ea9ee77f81de1e3c"
+    },
+    {
+      "path": "backend-src/src/model.rs",
+      "bytes": 4565,
+      "sha256": "69b3222579373c6060634f155abfada1b0baa323507cb886286fd98aeace3795"
+    },
+    {
+      "path": "backend-src/src/native_i18n.rs",
+      "bytes": 17112,
+      "sha256": "6df8ac6310ef717822f9fd34981fd40f109b6a10e0555758010801d78ccf574f"
+    },
+    {
+      "path": "backend-src/src/paths.rs",
+      "bytes": 26247,
+      "sha256": "21ce5df356f20b758b4b71a6c07cbf235f32915645ec6f7ab9f297e6dc2dbd9b"
+    },
+    {
+      "path": "backend-src/src/plugins/catalog.rs",
+      "bytes": 16226,
+      "sha256": "08170ee2c59e67c6cd441acbb8ccc5c0c25cb586a0ac28d8ea6a2050df5003aa"
+    },
+    {
+      "path": "backend-src/src/plugins/installer.rs",
+      "bytes": 21849,
+      "sha256": "ffd7f3d633c7dbf40bc41431a4ac90a1aa9d216704314998597ca70039242a0b"
+    },
+    {
+      "path": "backend-src/src/plugins/mod.rs",
+      "bytes": 4207,
+      "sha256": "adce38c8906c985f11adb85e8da43dc04b4d3c1f02e95ac076afa0f9a9d2c9d8"
+    },
+    {
+      "path": "backend-src/src/plugins/server.rs",
+      "bytes": 4721,
+      "sha256": "46f08fd301bbd642f33be5f24dcb765c7209ee5f9dde2e17fc62a1be7a3dacc7"
+    },
+    {
+      "path": "backend-src/src/protocol.rs",
+      "bytes": 35551,
+      "sha256": "064478b051c2677e8919cd3a50f1c5f9966986afd73f6cdc254632bbf75a32da"
+    },
+    {
+      "path": "backend-src/src/provider.rs",
+      "bytes": 54531,
+      "sha256": "1d4b75e0672b8b21e899bd31aecd04f9bcd323b083c9334d6af601cfb7ec539c"
+    },
+    {
+      "path": "backend-src/src/runtime.rs",
+      "bytes": 124351,
+      "sha256": "d247ba3bdac61b8b71ff8b8bbfacf29e4ce6098cea23cf4b846e3b06b700f340"
+    },
+    {
+      "path": "backend-src/src/skills/catalog.rs",
+      "bytes": 11728,
+      "sha256": "71b6f330eeef47f909125e0251c2ce7131a908511ecb4442b2e86382e8c2871c"
+    },
+    {
+      "path": "backend-src/src/skills/dependencies.rs",
+      "bytes": 6060,
+      "sha256": "46f5009341cc886926c7cc94e759cef68519ff5c831e36df83b03f866faa7f12"
+    },
+    {
+      "path": "backend-src/src/skills/metadata.rs",
+      "bytes": 6905,
+      "sha256": "ea089a77e32c183b34be9580fdf5b41d1966520cb76df4466a93b5a93f5c6827"
+    },
+    {
+      "path": "backend-src/src/skills/mod.rs",
+      "bytes": 1051,
+      "sha256": "5176d17fc63ae7aa28b75c63ed57f2e7a3d12e892f85e43510db7d55e8ffd88d"
+    },
+    {
+      "path": "backend-src/src/skills/package.rs",
+      "bytes": 18517,
+      "sha256": "6e6e1573ebe4dd713379b7a95f52770d9ef30ec45585bc405521f41960b9706e"
+    },
+    {
+      "path": "backend-src/src/skills/skillhub.rs",
+      "bytes": 25435,
+      "sha256": "674df526dba887047890831cafc28e128dc136eb17f39861d842db0a8c653509"
+    },
+    {
+      "path": "backend-src/src/skills/skillhub_signature.rs",
+      "bytes": 10770,
+      "sha256": "f421c093339f06f73e34967ffd5f3a41230f06d3a54f2bf474de6ce1ae519351"
+    },
+    {
+      "path": "backend-src/src/skills/transaction.rs",
+      "bytes": 31065,
+      "sha256": "497866a159f2e30e4ab991d8190fb3f5d5b6bdcb14ee60ed234ec0903f10ad78"
+    },
+    {
+      "path": "backend-src/src/vault.rs",
+      "bytes": 8728,
+      "sha256": "bc419c067a5b2dc9395702d444a040cc8719e7279219ef344af5928867f38a4b"
+    },
+    {
+      "path": "backend-src/src/windows_process.rs",
+      "bytes": 23454,
+      "sha256": "d4b4e076322807d5d3bf0e6fa26e9d8b737f63203b57681f6028c473e1acb64b"
+    },
+    {
+      "path": "backend-src/tests/codex_proxy_windows_smoke.rs",
+      "bytes": 2487,
+      "sha256": "52ce4ed2c70fabcd88115b3b59d03951a34fa2231e6ed0e8a67140e2419ee706"
+    },
+    {
+      "path": "backend-src/tests/native_i18n_windows_smoke.rs",
+      "bytes": 1228,
+      "sha256": "8b0a38b9c42051689b87b7153ace8fd667892f1790eea02fa5ce9b18cb9e5a9a"
+    },
+    {
+      "path": "launcher/UI_BASELINE.json",
+      "bytes": 649,
+      "sha256": "c9acf248bdc92e9f309077b05bd8ab8ffde6083acd3c5aadc0523c28ff76a7c0"
+    },
+    {
+      "path": "launcher/index.html",
+      "bytes": 1276,
+      "sha256": "5a95cdd6540b3a0027fb4f6fc35fa87491a3054a10127f14863b264ff4a8d176"
+    },
+    {
+      "path": "launcher/package-lock.json",
+      "bytes": 141831,
+      "sha256": "ef5a80553efd89cec6f47376185af247d59e96baf5a93120ffb7a22277aa44be"
+    },
+    {
+      "path": "launcher/package.json",
+      "bytes": 893,
+      "sha256": "738b5636c64d868ba8c437f891378aa8dc708d45a7c239d4fa8765253559a703"
+    },
+    {
+      "path": "launcher/src-tauri/Cargo.lock",
+      "bytes": 138025,
+      "sha256": "d1f17226fa4dd9736d65d987788d17b3356debe9eed3decde8f109edaa99ecd4"
+    },
+    {
+      "path": "launcher/src-tauri/Cargo.toml",
+      "bytes": 1344,
+      "sha256": "e016897e7d5e0e0b928aab10293bfcf7e4885efbae9c8ab84a7b1426de659e1c"
+    },
+    {
+      "path": "launcher/src-tauri/build.rs",
+      "bytes": 39,
+      "sha256": "487059eaf8a947b80f20a9aacac038a5047b2ad69d2401b827376c67d6fe847f"
+    },
+    {
+      "path": "launcher/src-tauri/capabilities/default.json",
+      "bytes": 238,
+      "sha256": "1712c000c599e43049c214fdc95ada836297806049f36c32498ac300b6ec3cc8"
+    },
+    {
+      "path": "launcher/src-tauri/gen/schemas/acl-manifests.json",
+      "bytes": 68210,
+      "sha256": "d3eace193b1e453756736eaf27bb156df62c7a41b2fe101403ee92ef93e69699"
+    },
+    {
+      "path": "launcher/src-tauri/gen/schemas/capabilities.json",
+      "bytes": 181,
+      "sha256": "cbe006c0c59a4804d09600495203c7342f4985bd6a1303640194e2959a291bd4"
+    },
+    {
+      "path": "launcher/src-tauri/gen/schemas/desktop-schema.json",
+      "bytes": 120083,
+      "sha256": "2a16f62c90a059a1b67e4501216bb3476f402087e99ba659dd38c9d0521f3b07"
+    },
+    {
+      "path": "launcher/src-tauri/gen/schemas/macOS-schema.json",
+      "bytes": 120083,
+      "sha256": "2a16f62c90a059a1b67e4501216bb3476f402087e99ba659dd38c9d0521f3b07"
+    },
+    {
+      "path": "launcher/src-tauri/gen/schemas/windows-schema.json",
+      "bytes": 120083,
+      "sha256": "2a16f62c90a059a1b67e4501216bb3476f402087e99ba659dd38c9d0521f3b07"
+    },
+    {
+      "path": "launcher/src-tauri/icons/icon.ico",
+      "bytes": 270622,
+      "sha256": "150c0407d862e91746881d49c6cf80b5c6109084553d7f18c322888d38a8b6f8"
+    },
+    {
+      "path": "launcher/src-tauri/icons/icon.png",
+      "bytes": 166428,
+      "sha256": "3909c93af44723f6fa59f3753349f7dbf304d2f031aa261152132a26eb69db0c"
+    },
+    {
+      "path": "launcher/src-tauri/src/chat.rs",
+      "bytes": 38353,
+      "sha256": "01296fcd024b291119af7c876ed9f1eb83cd0a7d98ee00dd9bb7641820650cdd"
+    },
+    {
+      "path": "launcher/src-tauri/src/chat_provider.rs",
+      "bytes": 26128,
+      "sha256": "c221b60b52d43873ec8ad4cfbebe691e3c3e4ee6bde4294bb735864eb70d5d1e"
+    },
+    {
+      "path": "launcher/src-tauri/src/commands.rs",
+      "bytes": 34927,
+      "sha256": "cfb700b506a68061de37a2e76b428195c670e3afba727c2ec057e75cf8f279a1"
+    },
+    {
+      "path": "launcher/src-tauri/src/error.rs",
+      "bytes": 2146,
+      "sha256": "3a18735951ade78f1205921c595d44524a9551ff621acf24b5ef39f793eccdb1"
+    },
+    {
+      "path": "launcher/src-tauri/src/factory_reset.rs",
+      "bytes": 60605,
+      "sha256": "7e9ba9e7803f2341411de0fd253f340337aaf27d5b46557a98f52cc825d7adaa"
+    },
+    {
+      "path": "launcher/src-tauri/src/first_use.rs",
+      "bytes": 24868,
+      "sha256": "8b5a3b06fc03b9a8b7f49eb2564c4988509447a737990f845f2d0c80ca551d5d"
+    },
+    {
+      "path": "launcher/src-tauri/src/image_provider.rs",
+      "bytes": 18318,
+      "sha256": "4d22908e462ec5cc99e2e8b7a8ddc02aff74628f3c920aea9a761ed0bab389c5"
+    },
+    {
+      "path": "launcher/src-tauri/src/imagegen.rs",
+      "bytes": 44436,
+      "sha256": "3070e942dde4e90625cdc0f9e3fa142ea4d3d7094ffa4f1c499bb4ca7fbaea17"
+    },
+    {
+      "path": "launcher/src-tauri/src/imagegen_repository.rs",
+      "bytes": 15394,
+      "sha256": "9fc4437bbfd45739028688ce53db6b2623fe92630700273e60bcc7ee9897f45c"
+    },
+    {
+      "path": "launcher/src-tauri/src/lib.rs",
+      "bytes": 8731,
+      "sha256": "3134f602c0c827aeb9ee34f6eeed466ffc25a47eddc1b4c0f5f6c9ad8a74b215"
+    },
+    {
+      "path": "launcher/src-tauri/src/license.rs",
+      "bytes": 23999,
+      "sha256": "9db0799dfca9eab76b1d79874429a23b50517404fe97de9090c5b8d0f0ae083e"
+    },
+    {
+      "path": "launcher/src-tauri/src/main.rs",
+      "bytes": 1144,
+      "sha256": "92dd5d8840979dd233542f8ec30d67f46f01f7738f3d9595e590b99c36428974"
+    },
+    {
+      "path": "launcher/src-tauri/src/tutorials.rs",
+      "bytes": 9802,
+      "sha256": "5b69e3baf8bd530f51228f87cd4d42417bfa88290d722a6e9c23496ab4b88473"
+    },
+    {
+      "path": "launcher/src-tauri/tauri.conf.json",
+      "bytes": 791,
+      "sha256": "c5b5e9ae16c3074e040a4df9478fc1d85f018a49d16917e7708783be051ef96f"
+    },
+    {
+      "path": "launcher/src/api.ts",
+      "bytes": 2445,
+      "sha256": "9aa93b9045c076457b3113c445a83581029ce00477d6b41489bb3f859fc39f77"
+    },
+    {
+      "path": "launcher/src/app/App.tsx",
+      "bytes": 208007,
+      "sha256": "9f6307a1946556539c36291d6fe4d7adf2a15060fb293a235accb4c80b7accfe"
+    },
+    {
+      "path": "launcher/src/assets/ASSET_SOURCES.md",
+      "bytes": 858,
+      "sha256": "46bedd1d4786c5e4966e5b82f36261f198e0ecf6c87d8dc46fe69c2b1c1451cb"
+    },
+    {
+      "path": "launcher/src/assets/branding/yunshu-workstation.png",
+      "bytes": 74915,
+      "sha256": "8ebb66ae2b58a6fab1440bbfbed610964cc33fb9478f9c6dceaee8c9de2802cc"
+    },
+    {
+      "path": "launcher/src/assets/catalog/adobe.svg",
+      "bytes": 254,
+      "sha256": "d82327c1338a20375971b53a2baa96486b7de3480c98894e7fbaaac44bc9528e"
+    },
+    {
+      "path": "launcher/src/assets/catalog/cloudflare.svg",
+      "bytes": 1193,
+      "sha256": "32876bda81542203316d67b9623818ac60986897cac79f70e03e8f31f7b7f160"
+    },
+    {
+      "path": "launcher/src/assets/catalog/figma.svg",
+      "bytes": 1108,
+      "sha256": "b9171110637bb953781a04044d9957478ae84f6a7ac597a25c0bfdfb3292a45e"
+    },
+    {
+      "path": "launcher/src/assets/catalog/git.svg",
+      "bytes": 441,
+      "sha256": "ae0cc33bc3fc7c29c500c90a029e32f21fdb9297e0b3d59948da27b2607e8a2c"
+    },
+    {
+      "path": "launcher/src/assets/catalog/github.svg",
+      "bytes": 837,
+      "sha256": "476ba7aa67b86da7d6e7567b08a4bf0eb1a2fd28da5fc243f8ee39a2f1ea6773"
+    },
+    {
+      "path": "launcher/src/assets/catalog/gmail.svg",
+      "bytes": 354,
+      "sha256": "21b263638deb769267d610a85382792624bdae2fc47c1bc2f8ae6fb6a50413e9"
+    },
+    {
+      "path": "launcher/src/assets/catalog/googleanalytics.svg",
+      "bytes": 753,
+      "sha256": "242fb58cb4e361af3e443f4fba463ca872af93e35075782d73d9a65dca303fa4"
+    },
+    {
+      "path": "launcher/src/assets/catalog/googlecalendar.svg",
+      "bytes": 1225,
+      "sha256": "aaebe4378bc647bccdeef7477e51a15fd634b281546e3def5f4d7596bc72ff83"
+    },
+    {
+      "path": "launcher/src/assets/catalog/linear.svg",
+      "bytes": 468,
+      "sha256": "3700486fede168b1fbaf0987eda06621d0e54dd30968578b857fd7360cb2029e"
+    },
+    {
+      "path": "launcher/src/assets/catalog/microsoft.svg",
+      "bytes": 399,
+      "sha256": "5cfb0ffa3231313c2968b5e3fedfcce8e2e96c61bde4572384c3889a77a80350"
+    },
+    {
+      "path": "launcher/src/assets/catalog/slack.svg",
+      "bytes": 1280,
+      "sha256": "10f01b8581b962de4fb20745d43d305f0f4eb169bd3d0de88ff353804a77ea99"
+    },
+    {
+      "path": "launcher/src/assets/engines/claudecode.svg",
+      "bytes": 1697,
+      "sha256": "d4366130584b1027bbc376e3c06a48500d6e862403a69556726d7722610e5561"
+    },
+    {
+      "path": "launcher/src/assets/engines/codex.svg",
+      "bytes": 1769,
+      "sha256": "4a2f43ce46b5b6e3722c95088f88d26ef91e6a8c2e598e70642a1c54367386e4"
+    },
+    {
+      "path": "launcher/src/assets/engines/openclaw.svg",
+      "bytes": 2096,
+      "sha256": "4123c0c75dda5b28e3e0d38075514085bf546178a620776344813c08fa41277c"
+    },
+    {
+      "path": "launcher/src/credentialField.test.ts",
+      "bytes": 907,
+      "sha256": "45dc6333ffe4bbff6fcb2b104f5cef3a39204f8a410a54a494a885facd70fae8"
+    },
+    {
+      "path": "launcher/src/credentialField.ts",
+      "bytes": 525,
+      "sha256": "a9381f69c56b46bfa0d29039dd0edf1c34ad82767d96ac59c6e9d5f6a9c8a8d9"
+    },
+    {
+      "path": "launcher/src/features/plugins/PluginCenter.test.ts",
+      "bytes": 524,
+      "sha256": "5ece954d1f11895d23d3e27c0517aca35c3de39bdf3e978b663253eeb6cdb06e"
+    },
+    {
+      "path": "launcher/src/features/plugins/PluginCenter.tsx",
+      "bytes": 16516,
+      "sha256": "2e8260fabc48679cbd425c89646d5a62103a974d378bf44f6b75d2b82db5f332"
+    },
+    {
+      "path": "launcher/src/features/tutorials/MarkdownTutorial.test.tsx",
+      "bytes": 1207,
+      "sha256": "6e6cbec108ec62184e6be8b120b8d8c052b3cf16de054e0bee7cbfc019e75bc8"
+    },
+    {
+      "path": "launcher/src/features/tutorials/MarkdownTutorial.tsx",
+      "bytes": 3693,
+      "sha256": "784cc71610104808643304a26e9e4294e9f2602e9adc8ad514379d562c97c1d5"
+    },
+    {
+      "path": "launcher/src/main.tsx",
+      "bytes": 240,
+      "sha256": "0185dcc2bd4e8cdcc1aea01855254c2c231008157867217792d35adc5b95a1f7"
+    },
+    {
+      "path": "launcher/src/mockCatalog.ts",
+      "bytes": 4682,
+      "sha256": "a6ee6469e7dd2d8fcdcb3320a62bc40edc6897c1a01611edd2db8bf509a8440c"
+    },
+    {
+      "path": "launcher/src/navigation.test.ts",
+      "bytes": 1280,
+      "sha256": "ff31b0f76ba7764cb80d1f806d6ce3ab623adf931f9fb0db4a1482c493b7d3c9"
+    },
+    {
+      "path": "launcher/src/navigation.ts",
+      "bytes": 496,
+      "sha256": "6fe7785f417b5e55df8d4ca50e345ef6e6155ef2f5d64968df3b936da397458c"
+    },
+    {
+      "path": "launcher/src/skillCategories.test.ts",
+      "bytes": 827,
+      "sha256": "3648aa4ff8600e15e4e71b8197cc30c166553897d30ff1f558b1f57e0fd0c420"
+    },
+    {
+      "path": "launcher/src/skillCategories.ts",
+      "bytes": 941,
+      "sha256": "bf4481af33ae3995ae450e5c1418797807f42ab6f397ce4aed3af2654c2a3973"
+    },
+    {
+      "path": "launcher/src/styles.css",
+      "bytes": 86711,
+      "sha256": "7d56776c67e7fa597c8ce005c20cc81bf0bd963630610f3d70725cd3f9fa5daa"
+    },
+    {
+      "path": "launcher/src/types.ts",
+      "bytes": 1080,
+      "sha256": "5aa0bb7764e4d20d990a89a0020557563aeb907ac4d6f0e926460976d824c6b7"
+    },
+    {
+      "path": "launcher/src/workstationApi.test.ts",
+      "bytes": 7440,
+      "sha256": "4711cb59c0579a92e80e2b1296e9981edb54bac5c457b8a1f3184544246ee234"
+    },
+    {
+      "path": "launcher/src/workstationApi.ts",
+      "bytes": 36425,
+      "sha256": "bae8007962511c8ffc7e09639117d00431353689fa547117abdd048c35e3ffa9"
+    },
+    {
+      "path": "launcher/tsconfig.json",
+      "bytes": 573,
+      "sha256": "278a9b48191474e76ad8c9d9fc15c7e59aa807949a36586fb8651dfe4bcdaf33"
+    },
+    {
+      "path": "launcher/vite.config.ts",
+      "bytes": 376,
+      "sha256": "98462c8176de363b8e251304d5992893c8b6f1d6895a15526e33855b7137b392"
+    }
+  ],
+  "excludedMacOSMetadataFiles": [
+    {
+      "path": "backend-src/src/._paths.rs",
+      "bytes": 163,
+      "sha256": "001bf0adfb392d136cb77d994a6542bff7ec413f0e0ea06089f3f02c47b09b8e"
+    },
+    {
+      "path": "launcher/src-tauri/._Cargo.lock",
+      "bytes": 163,
+      "sha256": "001bf0adfb392d136cb77d994a6542bff7ec413f0e0ea06089f3f02c47b09b8e"
+    },
+    {
+      "path": "launcher/src-tauri/._Cargo.toml",
+      "bytes": 163,
+      "sha256": "001bf0adfb392d136cb77d994a6542bff7ec413f0e0ea06089f3f02c47b09b8e"
+    },
+    {
+      "path": "launcher/src-tauri/src/._lib.rs",
+      "bytes": 163,
+      "sha256": "001bf0adfb392d136cb77d994a6542bff7ec413f0e0ea06089f3f02c47b09b8e"
+    },
+    {
+      "path": "launcher/src-tauri/src/._license.rs",
+      "bytes": 163,
+      "sha256": "001bf0adfb392d136cb77d994a6542bff7ec413f0e0ea06089f3f02c47b09b8e"
+    },
+    {
+      "path": "launcher/src/._styles.css",
+      "bytes": 163,
+      "sha256": "001bf0adfb392d136cb77d994a6542bff7ec413f0e0ea06089f3f02c47b09b8e"
+    },
+    {
+      "path": "launcher/src/._workstationApi.ts",
+      "bytes": 163,
+      "sha256": "001bf0adfb392d136cb77d994a6542bff7ec413f0e0ea06089f3f02c47b09b8e"
+    },
+    {
+      "path": "launcher/src/app/._App.tsx",
+      "bytes": 163,
+      "sha256": "001bf0adfb392d136cb77d994a6542bff7ec413f0e0ea06089f3f02c47b09b8e"
+    }
+  ],
+  "addedPublicationFiles": [
+    "workstation/LICENSE"
+  ],
+  "businessCodeModified": false
+}

@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "runtimeBuildId": "9303dc9771b80694",
+  "previousRuntimeBuildId": "830b50040945d37f",
+  "status": "candidate-not-user-accepted",
+  "builtAt": "2026-09-20T09:50:08.675Z",
+  "sourceDirectory": "source/release-9303dc9771b80694",
+  "changedSource": [
+    "backend-src/src/bridge.rs",
+    "backend-src/src/provider.rs"
+  ],
+  "runtimeSha256": "59ec6c3cf932a9f186602eeb0d1fb1bb7cbdc8e95ca70324b5cbe5e073fd4f0e",
+  "launcherSha256": "d7d0d2bdf2593f025a298f8fa86c00032efd3043fe80386f2f329fb86f592992",
+  "masterLaunched": false,
+  "credentialsImported": false
+}

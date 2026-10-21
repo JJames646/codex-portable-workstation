@@ -1,0 +1,42 @@
+[package]
+name = "yunshu-workstation-runtime"
+version = "0.1.0"
+edition = "2024"
+description = "云枢三引擎便携运行后端"
+license = "Proprietary"
+publish = false
+
+[[bin]]
+name = "workstation-runtime"
+path = "src/main.rs"
+
+[dependencies]
+aes-gcm = "0.10"
+anyhow = "1.0"
+axum = "0.8"
+base64 = "0.22"
+bytes = "1.10"
+clap = { version = "4.5", features = ["derive"] }
+ed25519-dalek = "2.2"
+futures-util = "0.3"
+getrandom = "0.3"
+rpassword = "7.4"
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls", "stream"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+sha2 = "0.10"
+tokio = { version = "1.47", features = ["macros", "net", "process", "rt-multi-thread", "signal", "time"] }
+toml_edit = "0.22"
+tower-http = { version = "0.6", features = ["fs"] }
+url = "2.5"
+zeroize = { version = "1.8", features = ["derive"] }
+zip = { version = "4.6", default-features = false, features = ["deflate"] }
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.61", features = ["Win32_Storage_FileSystem"] }
+
+[dev-dependencies]
+tempfile = "3.20"
+
+# 新版后端是独立工程，不能继承旧工作站Cargo workspace。
+[workspace]

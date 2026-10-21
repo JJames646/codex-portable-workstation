@@ -1,0 +1,51 @@
+{
+  "productVersion": "1.2.1",
+  "publishedSourceTag": "yunshu-v1.2.1",
+  "runtimeBuildId": "9303dc9771b80694",
+  "installer": {
+    "name": "云枢AI便携工作站一键安装包-1.2.1.exe",
+    "bytes": 2162300447,
+    "sha256": "ca77db1bf58234f4031d08b248550776a489aaf5e385afe2a9078a29b507f371",
+    "manifestGeneratedAt": "2026-09-20T12:28:58.673303800+00:00",
+    "ed25519SignatureValid": true,
+    "stubEmbedsSigningPublicKey": true,
+    "signingPublicKeyHex": "0504d1f24c9227b527134573267e3c07a8efec37436cccd6f9506904f32616a4",
+    "payloadSha256": "7152a631be5d661397f0b8cdac127e8d7d210da2842022e52c97b2b88b998c0b",
+    "allPayloadEntriesHashVerified": true,
+    "verifiedFileCount": 102890,
+    "verifiedExpandedBytes": 5759614940,
+    "nativeTemplateSha256": "89515adc1f53bd858e40958c8dd6eaa5a969316062ba791e7bf334a3d6dc100a"
+  },
+  "source": {
+    "originalWorkstationFilesVerified": 101,
+    "excludedMacOSMetadataFiles": 8,
+    "businessCodeModified": false,
+    "installerSourceBaseline": "2026-09-20 r4",
+    "license": "AGPL-3.0-only; see docs/OPEN_SOURCE.md for scope"
+  },
+  "video": {
+    "durationSeconds": 70.617,
+    "width": 1920,
+    "height": 1080,
+    "audioBitstreamPreserved": true,
+    "audioSha256": "1db4ccc36e05fd1d6ab9efd5822c2a98963803db4a5e8205de3c70326628d81b"
+  },
+  "validationLimit": "Existing package archival verification; no new Windows installation or executable rebuild.",
+  "assets": [
+    {
+      "name": "Yunshu-AI-Workstation-1.2.1-Windows-x64.zip",
+      "bytes": 2099468585,
+      "sha256": "8e31020a859741036cd708b65d1e21e5f0000eecfbdcbf199d57401ad021a602"
+    },
+    {
+      "name": "Yunshu-AI-Workstation-1.2.1-Source.zip",
+      "bytes": 40271373,
+      "sha256": "bfb887968b4033a71599cf168d465769f904262abb63f6e28277575b241741a4"
+    },
+    {
+      "name": "Yunshu-AI-Workstation-Demo.mp4",
+      "bytes": 18790795,
+      "sha256": "d9160f5047c8f1e18bc86dfba1a5a694d4dc2331c834e3894f0a2dd756045a8b"
+    }
+  ]
+}

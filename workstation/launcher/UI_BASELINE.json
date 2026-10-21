@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "frozenAt": "2026-07-31",
+  "source": "../ui-src",
+  "policy": "阶段五只允许绑定真实数据、状态和错误，不重新设计已确认页面。",
+  "files": {
+    "src/app/App.tsx": "2b080b7be578e5207b3a7c89f98ab42a9fe41f2238276ba2f50bf3c36c925ea1",
+    "src/styles.css": "3ab37c8ad653d10bd07d56a05c49229e37b1769501b1fd35838577b40f10bf66",
+    "src/navigation.ts": "51a090931f22ac23bdfd62d8e668bccc3be83c43fe19b2b1834c8c5d4e55d9ee",
+    "src/main.tsx": "0185dcc2bd4e8cdcc1aea01855254c2c231008157867217792d35adc5b95a1f7",
+    "index.html": "8a71ffa8feb6fd95cf3481ab1f814f369987381ff1a20540171ee7bcfbad8787"
+  }
+}
