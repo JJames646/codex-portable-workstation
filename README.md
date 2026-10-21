@@ -1,52 +1,56 @@
 <div align="center">
 
-# 云枢 AI 便携工作站 · 源码
+**English** | [简体中文](README.zh-CN.md)
 
-**Windows 便携 AI 工作环境的启动器、运行后端与安装工具。**
+# Yunshu AI Workstation · 云枢 AI 便携工作站
+
+**Source code for the launcher, runtime backend and installer of a portable AI workspace for Windows.**
 
 Rust · Tauri 2 · React · TypeScript · AGPL-3.0-only
 
-[**现成软件下载**](https://github.com/JJames646/codex-portable/releases/tag/v1.2.1) · [**工作站源码**](workstation) · [**安装器源码**](installer) · [**构建说明**](docs/BUILD_YUNSHU.md)
+[**Download / 下载**](https://github.com/JJames646/codex-portable/releases/tag/v1.2.1) · [**Source / 源码**](workstation) · [**Installer / 安装器**](installer) · [**Build / 构建**](docs/BUILD_YUNSHU.md)
 
-![云枢 AI 便携工作站](docs/images/overview.jpg)
+![Yunshu AI Workstation: the existing application interface in Simplified Chinese](docs/images/overview.jpg)
 
 </div>
 
-> **只想使用软件？** 前往 [下载仓库](https://github.com/JJames646/codex-portable)。现成软件需要卡密，加入 **QQ 群 `713993476`** 可免费申请。工作站卡密不包含模型 API 额度，模型服务需自行配置。
+> **Looking for the ready-to-use application?** Visit the [download repository](https://github.com/JJames646/codex-portable). The packaged software requires an activation code. Join **QQ group `713993476`** to request one for free. Workstation activation does not include model API credits; configure your own model service.
 
-## 这份源码对应什么
+**Interface language:** The current application, screenshots and promotional video are in Simplified Chinese. The project README is available in English and Chinese.
 
-本次公开的是现有 **v1.2.1 Windows 安装包**所对应的工作站源码，以及经历史构建记录核对的原生安装器源码。
+## What This Source Matches
 
-| 内容 | 目录与对应关系 |
+This repository publishes the workstation source corresponding to the existing **v1.2.1 Windows installer**, together with native installer source checked against historical build records.
+
+| Component | Location and relationship |
 | --- | --- |
-| 当前工作站前端及 Tauri 启动器 | [`workstation/launcher`](workstation/launcher) |
-| 当前 Rust 运行后端 | [`workstation/backend-src`](workstation/backend-src) |
-| 安装包内原始源码溯源记录 | [`workstation/SOURCE_PROVENANCE.json`](workstation/SOURCE_PROVENANCE.json) |
-| 原生安装器、管理员打包工具及核心库 | [`installer`](installer) |
-| 版本、文件哈希与发布核验 | [`docs/releases/v1.2.1.md`](docs/releases/v1.2.1.md) |
-| 上游 Codex++ 和早期工作站代码 | 根目录 `apps/`、`crates/`、`assets/`，保留原历史 |
+| Current workstation frontend and Tauri launcher | [`workstation/launcher`](workstation/launcher) |
+| Current Rust runtime backend | [`workstation/backend-src`](workstation/backend-src) |
+| Source provenance from the installer | [`workstation/SOURCE_PROVENANCE.json`](workstation/SOURCE_PROVENANCE.json) |
+| Native installer, administrator packaging tool and core library | [`installer`](installer) |
+| Version, file hashes and release verification | [`docs/releases/v1.2.1.md`](docs/releases/v1.2.1.md) (Chinese) |
+| Upstream Codex++ and early workstation code | Root-level `apps/`, `crates/` and `assets/`, with the original history preserved |
 
-工作站源码从安装包内部的 `source/release-9303dc9771b80694/` 提取，**101 个源码及资源文件逐个哈希一致**；另 8 个 macOS `._` 元数据文件不进入公开源码。当前产品入口是 `workstation/`，不是根目录的旧 Codex++ 构建入口。安装器代码来自对应的 2026 年 9 月 20 日 r4 源码快照；其模板哈希与 v1.2.1 包内模板一致。
+The workstation source was extracted from `source/release-9303dc9771b80694/` inside the installer. **All 101 source and resource files match their original hashes.** Eight macOS `._` metadata files are excluded from the published source. The current product lives in `workstation/`; the root-level Codex++ build entry belongs to the earlier codebase. Installer code comes from the September 20, 2026 r4 source snapshot, whose template hash matches the template embedded in the v1.2.1 package.
 
-源码压缩包包含当前工作站与安装器；早期 Codex++ 工程和提交历史可在本 GitHub 仓库浏览。
+The source ZIP contains the current workstation and installer. The earlier Codex++ project and commit history are available in this GitHub repository.
 
-## 产品能力
+## Capabilities
 
-- 集中配置与启动 Codex、Claude Code、OpenClaw。
-- AI 对话、独立图片生成入口和本地结果管理。
-- Skills 与插件资源浏览、安装管理及目标引擎切换。
-- 从程序所在位置推导工作目录，管理可迁移数据与子进程环境。
-- 中文使用教程、工作站设置、卡密激活。
-- 原生 Windows 安装向导、签名清单和文件完整性校验。
+- Configure and launch Codex, Claude Code and OpenClaw from one workspace.
+- Use AI Chat, a separate image generation workspace and local result management.
+- Browse and install Skills and plugins, with target engine selection.
+- Derive the working directory from the application location and manage transferable data and child-process environments.
+- Access Chinese tutorials, workstation settings and activation.
+- Install through a native Windows wizard with signed manifests and file integrity checks.
 
-| 对话工作区 | Skills 管理 |
+| AI Chat | Skills management |
 | --- | --- |
-| ![对话工作区](docs/images/chat.jpg) | ![Skills 管理](docs/images/skills.jpg) |
+| ![AI Chat workspace](docs/images/chat.jpg) | ![Skills management](docs/images/skills.jpg) |
 
-## 构建与验证
+## Build and Verify
 
-先阅读 [完整构建说明](docs/BUILD_YUNSHU.md)。前端验证：
+Start with the [full build guide (Chinese)](docs/BUILD_YUNSHU.md). To check the frontend:
 
 ```bash
 cd workstation/launcher
@@ -56,30 +60,30 @@ npm test
 npm run build
 ```
 
-后端验证：
+To test the backend:
 
 ```bash
 cargo test --manifest-path workstation/backend-src/Cargo.toml --locked
 ```
 
-Windows 成品需要对应 Rust / MSVC 环境及 WebView2。此源码仓库不包含完整第三方运行时、开发者凭据、管理员签名私钥或生产服务器配置。
+The Windows application requires the appropriate Rust / MSVC toolchain and WebView2. This source repository does not include complete third-party runtimes, developer credentials, administrator signing private keys or production server configuration.
 
-## 成品、源码与卡密
+## Software, Source and Activation
 
-**成品软件：** 下载后安装，加入 QQ 群 **713993476** 免费申请工作站卡密；也可在闲鱼搜索 **“云枢 AI”** 咨询。
+**Packaged software:** Download and install the application, then join QQ group **713993476** to request a free workstation activation code. You can also search for **"云枢 AI"** on Xianyu (闲鱼) for inquiries.
 
-**源码：** 按 [AGPL-3.0-only](LICENSE) 及 [开源范围说明](docs/OPEN_SOURCE.md) 提供。原始源码快照保留历史包元数据，当前公开授权由本仓库许可证和范围说明明确。模型服务账号、API 额度、第三方程序和商标不属于本项目的源码授权。
+**Source code:** Provided under [AGPL-3.0-only](LICENSE), subject to the [open-source scope statement (Chinese)](docs/OPEN_SOURCE.md). The original source snapshot retains historical package metadata; the repository license and scope statement define the current public grant. Model service accounts, API credits, third-party applications and trademarks are outside that source-code grant.
 
-## 视频与反馈
+## Video and Feedback
 
-[![观看 / 下载产品宣传视频](docs/images/demo-poster.jpg)](https://github.com/JJames646/codex-portable/releases/download/v1.2.1/Yunshu-AI-Workstation-Demo.mp4)
+[![Watch / download the product video](docs/images/demo-poster.jpg)](https://github.com/JJames646/codex-portable/releases/download/v1.2.1/Yunshu-AI-Workstation-Demo.mp4)
 
-欢迎通过 [Issues](https://github.com/JJames646/codex-portable-workstation/issues) 反馈可复现的问题。提交说明中请注明源码版本、系统和复现步骤，不要附带 API Key、卡密或私人会话。
+Report reproducible problems in [Issues](https://github.com/JJames646/codex-portable-workstation/issues). Include the source version, operating system and steps to reproduce. Do not attach API keys, activation codes or private conversations.
 
-## 上游与致谢
+## Upstream and Acknowledgments
 
-本仓库保留 [BigPizzaV3/CodexPlusPlus](https://github.com/BigPizzaV3/CodexPlusPlus) 的 Fork 关系、提交历史和 AGPL 许可证。早期工作站基于该项目演进；当前源码新增内容在 `workstation/` 与 `installer/` 中单独展示。
+This repository retains its fork relationship with [BigPizzaV3/CodexPlusPlus](https://github.com/BigPizzaV3/CodexPlusPlus), the commit history and the AGPL license. The early workstation evolved from that project; the current additions are presented separately in `workstation/` and `installer/`.
 
-[上游中文 README 归档](docs/upstream/CodexPlusPlus-README.zh.md) · [上游英文 README 归档](docs/upstream/CodexPlusPlus-README.en.md) · [贡献说明](CONTRIBUTING.md)
+[Archived upstream Chinese README](docs/upstream/CodexPlusPlus-README.zh.md) · [Archived upstream English README](docs/upstream/CodexPlusPlus-README.en.md) · [Contributing](CONTRIBUTING.md)
 
-第三方软件及品牌名称归各自权利人所有。本项目是独立维护的产品，不代表 OpenAI、Anthropic 或其他第三方官方背书。
+Third-party software and brand names belong to their respective owners. This is an independently maintained project and is not officially endorsed by OpenAI, Anthropic or other third parties.

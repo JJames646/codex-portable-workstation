@@ -1,3 +1,5 @@
+> **Historical upstream documentation.** For the current Yunshu AI Workstation, see [English](README.md) or [简体中文](README.zh-CN.md). The Codex++ features, downloads and community links below describe the upstream project.
+
 # Codex++
 
 <p align="center">
